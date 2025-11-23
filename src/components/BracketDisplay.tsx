@@ -29,7 +29,6 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({ initialSongs, matchResu
       <h3>Match Results:</h3>
       {matchResults.map((match, index) => {
         const winnerSong = match.song1.id === match.winnerId ? match.song1 : match.song2;
-        const loserSong = match.song1.id === match.winnerId ? match.song2 : match.song1;
         return (
           <div key={index} className="match-result">
             <span className={match.song1.id === match.winnerId ? 'winner' : 'loser'}>
