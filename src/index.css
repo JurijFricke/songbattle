@@ -5,6 +5,45 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 1.1rem; /* Slightly larger base font */
+  line-height: 1.6; /* Improved readability */
+  color: #333; /* Darker text color */
+  background-color: #f4f4f4; /* Light background for spacious feel */
+}
+
+h1 {
+  font-size: 3.5rem; /* Larger title */
+  font-weight: 700; /* Bolder */
+  color: #1DB954; /* Spotify green */
+  margin-bottom: 40px; /* More space below title */
+}
+
+h2 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #555;
+  margin-top: 30px;
+  margin-bottom: 25px;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #777;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+label {
+  display: block; /* Make labels block-level for margin-bottom to work */
+  margin-bottom: 8px; /* Space between label and input/select */
+  font-weight: 500; /* Slightly bolder labels */
+  color: #444;
+}
+
+/* Ensure form elements have top margin if not already covered */
+.custom-select, .custom-input {
+  margin-top: 15px; /* Add consistent top margin to form controls */
 }
 
 code {
@@ -20,7 +59,7 @@ code {
   border: none;
   border-radius: 25px;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 10px; /* Adjusted due to global margin-top for form controls */
   width: 100%;
   max-width: 250px;
   transition: background-color 0.2s ease, transform 0.1s ease; /* Smooth transitions */
