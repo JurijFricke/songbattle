@@ -233,13 +233,21 @@ app.get('/api/songs', async (req, res) => {
                 let allPlaylistItems = [];
                 let offset = 0;
                 let hasMore = true;
-                const maxPlaylistFetch = 500; // Limit fetching to a reasonable number of tracks from a playlist
+                const hardCapFetchLimit = 1000; // Hard cap on total tracks to fetch from a playlist
 
-                while (hasMore && allPlaylistItems.length < maxPlaylistFetch) {
-                    const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 100, offset: offset });
+                // Make an initial call to get total, then determine effective fetch limit
+                const initialPlaylistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 1, offset: 0 }); // Fetch just 1 to get total
+                const totalTracksInPlaylist = initialPlaylistData.body.total;
+                const effectiveFetchLimit = Math.min(totalTracksInPlaylist, hardCapFetchLimit);
+
+                while (hasMore && allPlaylistItems.length < effectiveFetchLimit) {
+                    const limit = Math.min(100, effectiveFetchLimit - allPlaylistItems.length); // Don't request more than needed
+                    if (limit <= 0) break; // Stop if no more tracks needed
+
+                    const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: limit, offset: offset });
                     allPlaylistItems = allPlaylistItems.concat(playlistData.body.items);
                     offset += playlistData.body.items.length;
-                    hasMore = playlistData.body.next !== null; // Check if there's a next page of results
+                    hasMore = playlistData.body.next !== null;
                 }
 
                 const playlistTracks = allPlaylistItems
