@@ -85,18 +85,7 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
           <div dangerouslySetInnerHTML={{ __html: song1.embed }} />
           <button
             onClick={() => handleVote(song1)}
-            style={{
-              fontSize: '1.2rem',
-              padding: '10px 20px',
-              backgroundColor: '#1DB954', // Spotify green
-              color: 'white',
-              border: 'none',
-              borderRadius: '25px',
-              cursor: 'pointer',
-              marginTop: '10px',
-              width: '100%',
-              maxWidth: '250px'
-            }}
+            className="vote-button"
           >
             Vote
           </button>
@@ -105,18 +94,7 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
           <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
           <button
             onClick={() => handleVote(song2)}
-            style={{
-              fontSize: '1.2rem',
-              padding: '10px 20px',
-              backgroundColor: '#1DB954', // Spotify green
-              color: 'white',
-              border: 'none',
-              borderRadius: '25px',
-              cursor: 'pointer',
-              marginTop: '10px',
-              width: '100%',
-              maxWidth: '250px'
-            }}
+            className="vote-button"
           >
             Vote
           </button>

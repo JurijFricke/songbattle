@@ -11,3 +11,27 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.vote-button {
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  background-color: #1DB954; /* Spotify green */
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 250px;
+  transition: background-color 0.2s ease, transform 0.1s ease; /* Smooth transitions */
+}
+
+.vote-button:hover {
+  background-color: #1ed760; /* Slightly lighter green on hover */
+  transform: translateY(-2px); /* Subtle lift effect */
+}
+
+.vote-button:active {
+  background-color: #13833d; /* Slightly darker green on click */
+  transform: translateY(0); /* Return to original position */
+}
