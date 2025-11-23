@@ -1,5 +1,6 @@
 import React from 'react';
 import { Song } from '../types/Song';
+import './BracketDisplay.css'; // Import BracketDisplay styles
 
 interface MatchResult {
   song1: Song;
@@ -13,38 +14,62 @@ interface BracketDisplayProps {
 }
 
 const BracketDisplay: React.FC<BracketDisplayProps> = ({ initialSongs, matchResults }) => {
-  // Logic to process matchResults and build the bracket structure will go here
-  // For now, let's just display the results in a simple list
-  // The actual visual bracket representation is complex and will be added later
-
   if (matchResults.length === 0) {
     return <div className="bracket-container">No matches played yet.</div>;
   }
 
-  // Group match results by rounds (this is a simplified approach, actual rounds might need more complex logic)
-  // For now, let's just list all matches. A proper bracket structure will require more thought.
+  // Determine the number of rounds
+  const totalSongs = initialSongs.length;
+  let numRounds = 0;
+  if (totalSongs > 1) {
+    numRounds = Math.log2(totalSongs);
+  }
+
+  const rounds: MatchResult[][] = [];
+  let matchIndex = 0;
+
+  for (let r = 0; r < numRounds; r++) {
+    const matchesInRound = totalSongs / Math.pow(2, r + 1);
+    const currentRoundMatches: MatchResult[] = [];
+    for (let i = 0; i < matchesInRound; i++) {
+      if (matchIndex < matchResults.length) {
+        currentRoundMatches.push(matchResults[matchIndex]);
+        matchIndex++;
+      }
+    }
+    if (currentRoundMatches.length > 0) {
+      rounds.push(currentRoundMatches);
+    }
+  }
 
   return (
     <div className="bracket-container">
-      <h3>Match Results:</h3>
-      {matchResults.map((match, index) => {
-        const winnerSong = match.song1.id === match.winnerId ? match.song1 : match.song2;
-        return (
-          <div key={index} className="match-result">
-            <span className={match.song1.id === match.winnerId ? 'winner' : 'loser'}>
-              {match.song1.title} by {match.song1.artist}
-            </span>
-            {' vs '}
-            <span className={match.song2.id === match.winnerId ? 'winner' : 'loser'}>
-              {match.song2.title} by {match.song2.artist}
-            </span>
-            {' -> Winner: '}
-            <span className="winner">
-              {winnerSong.title} by {winnerSong.artist}
-            </span>
+      <h3>Tournament Bracket</h3>
+      <div className="bracket-rounds">
+        {rounds.map((roundMatches, roundIndex) => (
+          <div key={roundIndex} className="bracket-round">
+            <h4>Round {roundIndex + 1}</h4>
+            {roundMatches.map((match, matchIdx) => {
+              const winnerSong = match.song1.id === match.winnerId ? match.song1 : match.song2;
+              return (
+                <div key={matchIdx} className="match">
+                  <div className="match-pair">
+                    <div className={match.song1.id === match.winnerId ? 'song-entry winner' : 'song-entry loser'}>
+                      {match.song1.title}
+                    </div>
+                    <div className={match.song2.id === match.winnerId ? 'song-entry winner' : 'song-entry loser'}>
+                      {match.song2.title}
+                    </div>
+                  </div>
+                  <div className="match-winner-indicator">
+                    <span className="winner-label">Winner:</span> {winnerSong.title}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 };

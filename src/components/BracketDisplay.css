@@ -4,7 +4,9 @@
   border: 1px solid #ddd;
   border-radius: 10px;
   background-color: #fff;
-  text-align: left;
+  text-align: center; /* Center content within the bracket container */
+  overflow-x: auto; /* Allow horizontal scrolling if bracket is too wide */
+  min-width: fit-content; /* Ensure container can shrink to fit content */
 }
 
 .bracket-container h3 {
@@ -13,19 +15,115 @@
   color: #1DB954;
 }
 
-.match-result {
-  margin-bottom: 10px;
-  padding: 8px;
+.bracket-rounds {
+  display: flex; /* Arrange rounds horizontally */
+  justify-content: center; /* Center the rounds */
+  gap: 30px; /* Space between rounds */
+  padding: 10px;
+}
+
+.bracket-round {
+  display: flex;
+  flex-direction: column; /* Matches stack vertically within a round */
+  align-items: center; /* Center matches within their round column */
+  flex: 1; /* Allow rounds to take equal space */
+  min-width: 200px; /* Minimum width for a round column */
+}
+
+.bracket-round h4 {
+  margin-bottom: 20px;
+  color: #444;
+  font-size: 1.3rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 5px;
+  width: 100%;
+}
+
+.match {
   background-color: #f9f9f9;
-  border-radius: 5px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 25px; /* Space between matches */
+  padding: 10px;
+  width: 100%;
+  max-width: 250px; /* Constrain match width */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  position: relative; /* For connector lines */
 }
 
-.match-result .winner {
+.match-pair {
+  border-bottom: 1px dashed #ccc; /* Separator between songs */
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+}
+
+.song-entry {
+  padding: 3px 0;
+  font-size: 0.95rem;
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Add ellipsis for long text */
+}
+
+.song-entry.winner {
   font-weight: bold;
-  color: #1DB954;
+  color: #1DB954; /* Spotify green for winner */
 }
 
-.match-result .loser {
+.song-entry.loser {
   color: #999;
   text-decoration: line-through;
+  font-size: 0.85rem; /* Smaller for losers */
+}
+
+.match-winner-indicator {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  margin-top: 8px;
+}
+
+.winner-label {
+  color: #1DB954;
+  font-weight: bold;
+}
+
+/* Basic connector lines (more complex for proper tree-like structure) */
+/* These styles are a starting point and might need adjustment for complex layouts */
+.match::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -15px; /* Extend to the right for next round */
+    width: 15px;
+    height: 1px;
+    background-color: #ccc;
+    transform: translateY(-50%);
+}
+
+.bracket-round + .bracket-round .match::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -15px; /* Extend to the left from previous round */
+    width: 15px;
+    height: 1px;
+    background-color: #ccc;
+    transform: translateY(-50%);
+}
+
+/* Vertical connector for matches in the same round going to next */
+.bracket-round .match:nth-child(odd):not(:last-child)::after {
+    height: calc(100% + 50px); /* Extend vertical line for spacing */
+    border-right: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    border-bottom-right-radius: 10px;
+}
+
+.bracket-round .match:nth-child(even)::after {
+    height: calc(100% + 50px); /* Extend vertical line for spacing */
+    border-right: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    border-top-right-radius: 10px;
+    top: -25px; /* Adjust vertical position for even matches */
 }
