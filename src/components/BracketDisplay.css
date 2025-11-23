@@ -4,9 +4,9 @@
   border: 1px solid #ddd;
   border-radius: 10px;
   background-color: #fff;
-  text-align: center; /* Center content within the bracket container */
-  overflow-x: auto; /* Allow horizontal scrolling if bracket is too wide */
-  min-width: fit-content; /* Ensure container can shrink to fit content */
+  text-align: center;
+  overflow-x: auto;
+  min-width: fit-content;
 }
 
 .bracket-container h3 {
@@ -16,18 +16,18 @@
 }
 
 .bracket-rounds {
-  display: flex; /* Arrange rounds horizontally */
-  justify-content: center; /* Center the rounds */
-  gap: 30px; /* Space between rounds */
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Reduced gap for tighter bracket */
   padding: 10px;
 }
 
 .bracket-round {
   display: flex;
-  flex-direction: column; /* Matches stack vertically within a round */
-  align-items: center; /* Center matches within their round column */
-  flex: 1; /* Allow rounds to take equal space */
-  min-width: 200px; /* Minimum width for a round column */
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 180px; /* Adjusted min-width for round column */
 }
 
 .bracket-round h4 {
@@ -39,91 +39,111 @@
   width: 100%;
 }
 
+.round-matches-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 30px; /* Space between matches in a round */
+  align-items: center;
+  width: 100%;
+}
+
 .match {
   background-color: #f9f9f9;
   border: 1px solid #eee;
   border-radius: 8px;
-  margin-bottom: 25px; /* Space between matches */
-  padding: 10px;
+  padding: 8px;
   width: 100%;
-  max-width: 250px; /* Constrain match width */
+  max-width: 200px; /* Adjusted max-width for match */
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  position: relative; /* For connector lines */
+  position: relative;
 }
 
-.match-pair {
-  border-bottom: 1px dashed #ccc; /* Separator between songs */
+.match-participants {
+  border-bottom: 1px dashed #ccc;
   padding-bottom: 5px;
   margin-bottom: 5px;
 }
 
 .song-entry {
   padding: 3px 0;
-  font-size: 0.95rem;
-  white-space: nowrap; /* Prevent text wrapping */
+  font-size: 0.9rem; /* Adjusted font size */
+  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* Add ellipsis for long text */
+  text-overflow: ellipsis;
+  text-align: left; /* Align text left within song entry */
+  padding-left: 5px;
 }
 
 .song-entry.winner {
   font-weight: bold;
-  color: #1DB954; /* Spotify green for winner */
+  color: #1DB954;
 }
 
 .song-entry.loser {
   color: #999;
   text-decoration: line-through;
-  font-size: 0.85rem; /* Smaller for losers */
+  font-size: 0.8rem; /* Adjusted font size for losers */
 }
 
 .match-winner-indicator {
   font-size: 0.9rem;
-  font-weight: 500;
-  color: #333;
-  margin-top: 8px;
-}
-
-.winner-label {
-  color: #1DB954;
   font-weight: bold;
+  color: #333;
+  margin-top: 5px;
+  text-align: center;
+  background-color: #e6ffe6; /* Light green background for winner indicator */
+  padding: 3px 0;
+  border-radius: 4px;
 }
 
-/* Basic connector lines (more complex for proper tree-like structure) */
-/* These styles are a starting point and might need adjustment for complex layouts */
-.match::after {
+/* Advanced CSS for bracket lines - this is a complex approximation */
+/* Lines connecting to the next round */
+.bracket-round .match::after {
     content: '';
     position: absolute;
     top: 50%;
-    right: -15px; /* Extend to the right for next round */
-    width: 15px;
+    right: -25px; /* Adjust based on gap */
+    width: 20px; /* Horizontal line segment */
     height: 1px;
     background-color: #ccc;
     transform: translateY(-50%);
+    z-index: 1; /* Ensure lines are behind content if needed */
 }
 
-.bracket-round + .bracket-round .match::before {
+/* Vertical lines for matches within the same round connecting to the next */
+.bracket-round .match:nth-child(odd) { /* For top match in a pair */
+    margin-bottom: 0; /* Remove bottom margin to connect */
+    padding-bottom: 0;
+}
+
+.bracket-round .match:nth-child(odd)::before { /* Vertical segment for top match */
     content: '';
     position: absolute;
+    right: -25px; /* Align with horizontal line */
     top: 50%;
-    left: -15px; /* Extend to the left from previous round */
-    width: 15px;
-    height: 1px;
+    width: 1px;
+    height: calc(50% + 15px); /* Extend downwards to connect with next */
     background-color: #ccc;
-    transform: translateY(-50%);
+    transform: translateY(0%);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
-/* Vertical connector for matches in the same round going to next */
-.bracket-round .match:nth-child(odd):not(:last-child)::after {
-    height: calc(100% + 50px); /* Extend vertical line for spacing */
-    border-right: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
-    border-bottom-right-radius: 10px;
+.bracket-round .match:nth-child(even)::before { /* Vertical segment for bottom match */
+    content: '';
+    position: absolute;
+    right: -25px; /* Align with horizontal line */
+    bottom: 50%;
+    width: 1px;
+    height: calc(50% + 15px); /* Extend upwards to connect with previous */
+    background-color: #ccc;
+    transform: translateY(0%);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }
 
-.bracket-round .match:nth-child(even)::after {
-    height: calc(100% + 50px); /* Extend vertical line for spacing */
-    border-right: 1px solid #ccc;
-    border-top: 1px solid #ccc;
-    border-top-right-radius: 10px;
-    top: -25px; /* Adjust vertical position for even matches */
+/* Hide lines for the final match */
+.bracket-round:last-child .match::after,
+.bracket-round:last-child .match::before {
+    display: none;
 }

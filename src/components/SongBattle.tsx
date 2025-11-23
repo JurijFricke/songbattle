@@ -91,13 +91,15 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
       <div>
         <h2>Winner!</h2>
         <div dangerouslySetInnerHTML={{ __html: winner.embed }} />
-        <button
-          onClick={() => setShowBracket(!showBracket)}
-          className="start-game-button" // Reusing for consistent styling
-          style={{ marginTop: '20px', marginBottom: '20px' }}
-        >
-          {showBracket ? 'Hide Bracket' : 'Show Bracket'}
-        </button>
+        {songCount <= 64 && (
+          <button
+            onClick={() => setShowBracket(!showBracket)}
+            className="start-game-button" // Reusing for consistent styling
+            style={{ marginTop: '20px', marginBottom: '20px' }}
+          >
+            {showBracket ? 'Hide Bracket' : 'Show Bracket'}
+          </button>
+        )}
 
         {showBracket && (
           <BracketDisplay initialSongs={initialContenders} matchResults={bracketResults} />

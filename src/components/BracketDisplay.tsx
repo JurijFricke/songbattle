@@ -49,24 +49,26 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({ initialSongs, matchResu
         {rounds.map((roundMatches, roundIndex) => (
           <div key={roundIndex} className="bracket-round">
             <h4>Round {roundIndex + 1}</h4>
-            {roundMatches.map((match, matchIdx) => {
-              const winnerSong = match.song1.id === match.winnerId ? match.song1 : match.song2;
-              return (
-                <div key={matchIdx} className="match">
-                  <div className="match-pair">
-                    <div className={match.song1.id === match.winnerId ? 'song-entry winner' : 'song-entry loser'}>
-                      {match.song1.title}
+            <div className="round-matches-wrapper">
+              {roundMatches.map((match, matchIdx) => {
+                const winnerSong = match.song1.id === match.winnerId ? match.song1 : match.song2;
+                return (
+                  <div key={matchIdx} className="match">
+                    <div className="match-participants">
+                      <div className={match.song1.id === match.winnerId ? 'song-entry winner' : 'song-entry loser'}>
+                        {match.song1.title}
+                      </div>
+                      <div className={match.song2.id === match.winnerId ? 'song-entry winner' : 'song-entry loser'}>
+                        {match.song2.title}
+                      </div>
                     </div>
-                    <div className={match.song2.id === match.winnerId ? 'song-entry winner' : 'song-entry loser'}>
-                      {match.song2.title}
+                    <div className="match-winner-indicator">
+                      {winnerSong.title}
                     </div>
                   </div>
-                  <div className="match-winner-indicator">
-                    <span className="winner-label">Winner:</span> {winnerSong.title}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         ))}
       </div>
