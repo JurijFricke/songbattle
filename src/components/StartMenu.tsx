@@ -17,6 +17,7 @@ const StartMenu = ({ startGame }: Props) => {
           id="song-count"
           value={songCount}
           onChange={(e) => setSongCount(parseInt(e.target.value))}
+          className="custom-select"
         >
           <option value="16">16</option>
           <option value="32">32</option>
@@ -33,7 +34,7 @@ const StartMenu = ({ startGame }: Props) => {
           value={playlistUrl}
           onChange={(e) => setPlaylistUrl(e.target.value)}
           placeholder="e.g., https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
-          style={{ width: '300px', padding: '8px', marginLeft: '10px' }}
+          className="custom-input"
         />
       </div>
       <button onClick={() => startGame(songCount, playlistUrl)} className="start-game-button" style={{ marginTop: '20px' }}>
