@@ -11,7 +11,7 @@ const StartMenu = ({ startGame }: Props) => {
   return (
     <div>
       <h2>Start Menu</h2>
-      <div>
+      <div style={{ marginBottom: '30px' }}>
         <label htmlFor="song-count">Select number of songs:</label>
         <select
           id="song-count"
@@ -23,6 +23,7 @@ const StartMenu = ({ startGame }: Props) => {
           <option value="32">32</option>
           <option value="64">64</option>
           <option value="128">128</option>
+          <option value="256">256</option>
         </select>
       </div>
       <div style={{ marginTop: '20px' }}>
