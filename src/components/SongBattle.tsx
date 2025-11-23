@@ -16,7 +16,7 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
   useEffect(() => {
     const fetchSongs = async () => {
       try {
-        let url = `http://127.0.0.1:3001/api/songs?count=${songCount}`;
+        let url = `https://songbattle-backend.onrender.com/api/songs?count=${songCount}`;
         if (playlistUrl) {
           url += `&playlistUrl=${encodeURIComponent(playlistUrl)}`;
         }
