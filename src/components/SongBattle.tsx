@@ -5,9 +5,10 @@ import ProgressBar from './ProgressBar'; // Import ProgressBar component
 interface Props {
   songCount: number;
   playlistUrl?: string; // Add playlistUrl to props
+  resetGame: () => void; // New prop for resetting the game
 }
 
-const SongBattle = ({ songCount, playlistUrl }: Props) => {
+const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
   const [round, setRound] = useState(1);
   const [contenders, setContenders] = useState<Song[]>([]);
   const [nextContenders, setNextContenders] = useState<Song[]>([]);
@@ -15,6 +16,8 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
   const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // New state for error messages
   const [isPlaylistLoading, setIsPlaylistLoading] = useState(false); // New state for loading indicator
+  const [isFading, setIsFading] = useState(false); // New state for fade transition
+  const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null); // New state for vote feedback
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -52,23 +55,32 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
   }, [songCount, playlistUrl]);
 
   const handleVote = (selectedSong: Song) => {
-    const newNextContenders = [...nextContenders, selectedSong];
-    setNextContenders(newNextContenders);
+    setLastClickedButtonId(selectedSong.id); // Set the ID of the clicked song
 
-    const nextBattleIndex = currentBattleIndex + 2;
+    setIsFading(true); // Start fade-out
 
-    if (nextBattleIndex < contenders.length) {
-      setCurrentBattleIndex(nextBattleIndex);
-    } else {
-      if (newNextContenders.length === 1) {
-        setWinner(newNextContenders[0]);
+    setTimeout(() => {
+      setLastClickedButtonId(null); // Clear feedback before next battle starts
+
+      const newNextContenders = [...nextContenders, selectedSong];
+      setNextContenders(newNextContenders);
+
+      const nextBattleIndex = currentBattleIndex + 2;
+
+      if (nextBattleIndex < contenders.length) {
+        setCurrentBattleIndex(nextBattleIndex);
       } else {
-        setRound(round + 1);
-        setContenders(newNextContenders);
-        setNextContenders([]);
-        setCurrentBattleIndex(0);
+        if (newNextContenders.length === 1) {
+          setWinner(newNextContenders[0]);
+        } else {
+          setRound(round + 1);
+          setContenders(newNextContenders);
+          setNextContenders([]);
+          setCurrentBattleIndex(0);
+        }
       }
-    }
+      setIsFading(false); // End fade-out, start fade-in
+    }, 500); // Match CSS transition duration
   };
 
   if (winner) {
@@ -76,6 +88,13 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
       <div>
         <h2>Winner!</h2>
         <div dangerouslySetInnerHTML={{ __html: winner.embed }} />
+        <button
+          onClick={resetGame}
+          className="start-game-button"
+          style={{ marginTop: '30px' }}
+        >
+          Play Again
+        </button>
       </div>
     );
   }
@@ -123,12 +142,12 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
           label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`}
         />
       )}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }} className={isFading ? 'fade-out' : 'fade-in'}>
         <div style={{ width: '450px' }}>
           <div dangerouslySetInnerHTML={{ __html: song1.embed }} />
           <button
             onClick={() => handleVote(song1)}
-            className="vote-button"
+            className={`vote-button ${lastClickedButtonId === song1.id ? 'voted-button' : ''}`}
           >
             Vote
           </button>
@@ -137,7 +156,7 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
           <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
           <button
             onClick={() => handleVote(song2)}
-            className="vote-button"
+            className={`vote-button ${lastClickedButtonId === song2.id ? 'voted-button' : ''}`}
           >
             Vote
           </button>

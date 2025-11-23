@@ -185,3 +185,20 @@ code {
   color: #666;
   font-weight: bold;
 }
+
+/* Fade Transitions */
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
+
+.fade-in {
+  opacity: 1;
+  transition: opacity 0.5s ease-in;
+}
+
+/* Voted Button Feedback */
+.voted-button {
+  box-shadow: 0 0 15px 5px rgba(29, 185, 84, 0.7); /* Green glow effect */
+  transform: scale(1.02); /* Slightly grow */
+}

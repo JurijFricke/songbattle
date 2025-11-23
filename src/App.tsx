@@ -13,11 +13,16 @@ function App() {
     setGameStarted(true);
   };
 
+  const resetGame = () => {
+    setGameStarted(false);
+    setSelectedPlaylistUrl(undefined); // Clear playlist URL for next game
+  };
+
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
       <h1>Song Battle</h1>
       {gameStarted ? (
-        <SongBattle songCount={songCount} playlistUrl={selectedPlaylistUrl} />
+        <SongBattle songCount={songCount} playlistUrl={selectedPlaylistUrl} resetGame={resetGame} />
       ) : (
         <StartMenu startGame={startGame} />
       )}
