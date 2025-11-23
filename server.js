@@ -11,24 +11,24 @@ const CACHE_FILE = 'cached_songs.json';
 
 // Helper function to read from cache
 const readCache = async () => {
-  try {
-    const data = await fs.readFile(CACHE_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    if (error.code !== 'ENOENT') { // Ignore file not found errors
-      console.error('Error reading cache file:', error);
+    try {
+        const data = await fs.readFile(CACHE_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        if (error.code !== 'ENOENT') { // Ignore file not found errors
+            console.error('Error reading cache file:', error);
+        }
+        return [];
     }
-    return [];
-  }
 };
 
 // Helper function to write to cache
 const writeCache = async (data) => {
-  try {
-    await fs.writeFile(CACHE_FILE, JSON.stringify(data, null, 2), 'utf8');
-  } catch (error) {
-    console.error('Error writing cache file:', error);
-  }
+    try {
+        await fs.writeFile(CACHE_FILE, JSON.stringify(data, null, 2), 'utf8');
+    } catch (error) {
+        console.error('Error writing cache file:', error);
+    }
 };
 
 //===============
@@ -94,9 +94,9 @@ const refreshClientAccessToken = async () => {
 // Function to fetch songs using diverse search queries
 const fetchSongsFromSearch = async () => {
     let allTracks = [];
-        for (let i = 0; i < 15; i++) { // Make 15 search requests
-          const randomQuery = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
-          try {
+    for (let i = 0; i < 5; i++) { // Make 15 search requests
+        const randomQuery = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
+        try {
             const searchData = await spotifyApi.searchTracks(randomQuery, { limit: 50 }); // Fetch up to 50 tracks per request            allTracks = allTracks.concat(searchData.body.tracks.items);
         } catch (searchError) {
             console.warn(`Could not fetch tracks for query "${randomQuery}":`, searchError.message);
@@ -109,99 +109,99 @@ const fetchSongsFromSearch = async () => {
 
 const populateSongsPool = async () => {
 
-  let cacheLoaded = false;
+    let cacheLoaded = false;
 
 
 
-  // Try to load from cache first
+    // Try to load from cache first
 
-  try {
+    try {
 
-    const cachedData = await readCache();
+        const cachedData = await readCache();
 
-    if (cachedData && cachedData.length > 0) {
+        if (cachedData && cachedData.length > 0) {
 
-      songsPool = cachedData;
+            songsPool = cachedData;
 
-      cacheLoaded = true;
+            cacheLoaded = true;
 
-      console.log(`Songs loaded from cache: ${songsPool.length} songs.`);
+            console.log(`Songs loaded from cache: ${songsPool.length} songs.`);
 
-    }
+        }
 
-  } catch (cacheError) {
+    } catch (cacheError) {
 
-    console.warn('Could not load songs from cache on startup:', cacheError.message);
-
-  }
-
-
-
-  await refreshClientAccessToken(); // Always try to refresh token
-
-
-
-  try {
-
-    const freshTracks = await fetchSongsFromSearch();
-
-    if (freshTracks && freshTracks.length > 0) {
-
-      const uniqueTracks = freshTracks.filter(
-
-        (item, index, self) =>
-
-          item && item.id && self.findIndex((t) => t && t.id === item.id) === index
-
-      );
-
-
-
-      const newSongsPool = uniqueTracks.map((item) => ({
-
-        id: item.id,
-
-        title: item.name,
-
-        artist: item.artists.map((artist) => artist.name).join(', '),
-
-        embed: `<iframe src="https://open.spotify.com/embed/track/${item.id}" width="100%" height="352" frameBorder="0"></iframe>`,
-
-      }));
-
-      songsPool = newSongsPool; // Update the global songsPool
-
-      await writeCache(songsPool); // Write successful fetch to cache
-
-      console.log(`Successfully fetched and mapped ${songsPool.length} unique songs into the pool and updated cache.`);
-
-    } else if (!cacheLoaded) {
-
-      // If fetch failed and no cache was loaded, log a warning
-
-      console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
-
-    } else {
-
-      console.log('Failed to fetch new songs. Using previously loaded cache.');
+        console.warn('Could not load songs from cache on startup:', cacheError.message);
 
     }
 
-  } catch (fetchError) {
 
-    console.error('Error fetching fresh songs:', fetchError);
 
-    if (cacheLoaded) {
+    await refreshClientAccessToken(); // Always try to refresh token
 
-      console.warn('Failed to fetch new songs. Using previously loaded cache.');
 
-    } else {
 
-      console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
+    try {
+
+        const freshTracks = await fetchSongsFromSearch();
+
+        if (freshTracks && freshTracks.length > 0) {
+
+            const uniqueTracks = freshTracks.filter(
+
+                (item, index, self) =>
+
+                item && item.id && self.findIndex((t) => t && t.id === item.id) === index
+
+            );
+
+
+
+            const newSongsPool = uniqueTracks.map((item) => ({
+
+                id: item.id,
+
+                title: item.name,
+
+                artist: item.artists.map((artist) => artist.name).join(', '),
+
+                embed: `<iframe src="https://open.spotify.com/embed/track/${item.id}" width="100%" height="352" frameBorder="0"></iframe>`,
+
+            }));
+
+            songsPool = newSongsPool; // Update the global songsPool
+
+            await writeCache(songsPool); // Write successful fetch to cache
+
+            console.log(`Successfully fetched and mapped ${songsPool.length} unique songs into the pool and updated cache.`);
+
+        } else if (!cacheLoaded) {
+
+            // If fetch failed and no cache was loaded, log a warning
+
+            console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
+
+        } else {
+
+            console.log('Failed to fetch new songs. Using previously loaded cache.');
+
+        }
+
+    } catch (fetchError) {
+
+        console.error('Error fetching fresh songs:', fetchError);
+
+        if (cacheLoaded) {
+
+            console.warn('Failed to fetch new songs. Using previously loaded cache.');
+
+        } else {
+
+            console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
+
+        }
 
     }
-
-  }
 
 };
 
