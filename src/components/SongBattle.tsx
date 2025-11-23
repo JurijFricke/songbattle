@@ -13,7 +13,6 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
   const [winner, setWinner] = useState<Song | null>(null);
   const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // New state for error messages
-  const [initialContenders, setInitialContenders] = useState<Song[]>([]); // State to store initial song list
   const [isPlaylistLoading, setIsPlaylistLoading] = useState(false); // New state for loading indicator
 
   useEffect(() => {
@@ -39,7 +38,6 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
 
         const data = await response.json();
         setContenders(data);
-        setInitialContenders(data); // Store initial fetched songs for potential future bracket
       } catch (error: any) { // Use 'any' type for error for broader compatibility
         console.error('Error fetching songs:', error);
         setErrorMessage(error.message || 'Failed to load songs. Please try again later.');
