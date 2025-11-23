@@ -69,10 +69,10 @@ const refreshClientAccessToken = async () => {
 // Function to fetch songs using diverse search queries
 const fetchSongsFromSearch = async () => {
     let allTracks = [];
-      for (let i = 0; i < 10; i++) { // Make 10 search requests
-        const randomQuery = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
-        try {
-          const searchData = await spotifyApi.searchTracks(randomQuery, { limit: 100 }); // Fetch up to 100 tracks per request            allTracks = allTracks.concat(searchData.body.tracks.items);
+        for (let i = 0; i < 15; i++) { // Make 15 search requests
+          const randomQuery = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
+          try {
+            const searchData = await spotifyApi.searchTracks(randomQuery, { limit: 50 }); // Fetch up to 50 tracks per request            allTracks = allTracks.concat(searchData.body.tracks.items);
         } catch (searchError) {
             console.warn(`Could not fetch tracks for query "${randomQuery}":`, searchError.message);
         }
