@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Song } from '../types/Song';
+import ProgressBar from './ProgressBar'; // Import ProgressBar component
 
 interface Props {
   songCount: number;
@@ -81,7 +82,7 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
 
   if (contenders.length === 0) {
     if (isPlaylistLoading) {
-      return <div>Loading your playlist songs... this might take a moment!</div>;
+      return <ProgressBar current={0} total={1} label="Loading playlist songs..." />;
     }
     return <div>Loading songs...</div>;
   }
@@ -116,7 +117,11 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
       )}
       <h2>Round {round}</h2>
       {totalMatchupsInRound > 0 && (
-        <h3>Matchup {currentMatchupNumber}/{totalMatchupsInRound}</h3>
+        <ProgressBar
+          current={currentMatchupNumber}
+          total={totalMatchupsInRound}
+          label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`}
+        />
       )}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
         <div style={{ width: '450px' }}>
