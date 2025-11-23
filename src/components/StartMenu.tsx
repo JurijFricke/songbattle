@@ -36,7 +36,7 @@ const StartMenu = ({ startGame }: Props) => {
           style={{ width: '300px', padding: '8px', marginLeft: '10px' }}
         />
       </div>
-      <button onClick={() => startGame(songCount, playlistUrl)} style={{ marginTop: '20px' }}>
+      <button onClick={() => startGame(songCount, playlistUrl)} className="start-game-button" style={{ marginTop: '20px' }}>
         Start Game
       </button>
     </div>

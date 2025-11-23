@@ -35,3 +35,29 @@ code {
   background-color: #13833d; /* Slightly darker green on click */
   transform: translateY(0); /* Return to original position */
 }
+
+.start-game-button {
+  font-size: 1.4rem; /* Slightly larger */
+  padding: 12px 25px;
+  background-color: #1ed760; /* A brighter Spotify green */
+  color: white;
+  border: none;
+  border-radius: 30px; /* Slightly more rounded */
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px; /* Slightly wider */
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add some depth */
+}
+
+.start-game-button:hover {
+  background-color: #24e068; /* Even brighter green on hover */
+  transform: translateY(-3px); /* More pronounced lift */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.start-game-button:active {
+  background-color: #17a74a; /* Darker green on click */
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
