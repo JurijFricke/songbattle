@@ -1,24 +1,26 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import StartMenu from './components/StartMenu';
+import SongBattle from './components/SongBattle';
 
 function App() {
+  const [gameStarted, setGameStarted] = useState(false);
+  const [songCount, setSongCount] = useState(16);
+  const [selectedPlaylistUrl, setSelectedPlaylistUrl] = useState<string | undefined>(undefined);
+
+  const startGame = (count: number, playlistUrl?: string) => {
+    setSongCount(count);
+    setSelectedPlaylistUrl(playlistUrl);
+    setGameStarted(true);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ textAlign: 'center', padding: '20px' }}>
+      <h1>Song Battle</h1>
+      {gameStarted ? (
+        <SongBattle songCount={songCount} playlistUrl={selectedPlaylistUrl} />
+      ) : (
+        <StartMenu startGame={startGame} />
+      )}
     </div>
   );
 }
