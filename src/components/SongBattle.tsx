@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Song } from '../types/Song';
-import BracketDisplay from './BracketDisplay'; // Import BracketDisplay component
-import './BracketDisplay.css'; // Import BracketDisplay styles
-
-interface MatchResult {
-  song1: Song;
-  song2: Song;
-  winnerId: string;
-}
 
 interface Props {
   songCount: number;
@@ -21,14 +13,11 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
   const [winner, setWinner] = useState<Song | null>(null);
   const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // New state for error messages
-  const [bracketResults, setBracketResults] = useState<MatchResult[]>([]); // New state for bracket results
-  const [showBracket, setShowBracket] = useState(false); // New state to toggle bracket display
-  const [initialContenders, setInitialContenders] = useState<Song[]>([]); // New state to store initial song list
+  const [initialContenders, setInitialContenders] = useState<Song[]>([]); // State to store initial song list
 
   useEffect(() => {
     const fetchSongs = async () => {
       setErrorMessage(null); // Clear any previous errors
-      setBracketResults([]); // Reset bracket results on new game start
       try {
         let url = `https://songbattle-backend.onrender.com/api/songs?count=${songCount}`;
         if (playlistUrl) {
@@ -53,20 +42,6 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
   }, [songCount, playlistUrl]);
 
   const handleVote = (selectedSong: Song) => {
-    // Get the songs from the current battle
-    const song1 = contenders[currentBattleIndex];
-    const song2 = contenders[currentBattleIndex + 1];
-
-    // Record the match result
-    if (song1 && song2) {
-      const matchResult: MatchResult = {
-        song1: song1,
-        song2: song2,
-        winnerId: selectedSong.id,
-      };
-      setBracketResults((prevResults) => [...prevResults, matchResult]);
-    }
-
     const newNextContenders = [...nextContenders, selectedSong];
     setNextContenders(newNextContenders);
 
@@ -91,19 +66,6 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
       <div>
         <h2>Winner!</h2>
         <div dangerouslySetInnerHTML={{ __html: winner.embed }} />
-        {songCount <= 64 && (
-          <button
-            onClick={() => setShowBracket(!showBracket)}
-            className="start-game-button" // Reusing for consistent styling
-            style={{ marginTop: '20px', marginBottom: '20px' }}
-          >
-            {showBracket ? 'Hide Bracket' : 'Show Bracket'}
-          </button>
-        )}
-
-        {showBracket && (
-          <BracketDisplay initialSongs={initialContenders} matchResults={bracketResults} />
-        )}
       </div>
     );
   }
