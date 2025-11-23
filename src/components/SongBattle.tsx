@@ -13,10 +13,18 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
   const [winner, setWinner] = useState<Song | null>(null);
   const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // New state for error messages
+  const [initialContenders, setInitialContenders] = useState<Song[]>([]); // State to store initial song list
+  const [isPlaylistLoading, setIsPlaylistLoading] = useState(false); // New state for loading indicator
 
   useEffect(() => {
     const fetchSongs = async () => {
       setErrorMessage(null); // Clear any previous errors
+      setContenders([]); // Clear contenders when fetching new songs
+      const isLargePlaylistFetch = playlistUrl && songCount > 100; // Heuristic for large fetch
+      if (isLargePlaylistFetch) {
+        setIsPlaylistLoading(true); // Start loading indicator
+      }
+
       try {
         let url = `https://songbattle-backend.onrender.com/api/songs?count=${songCount}`;
         if (playlistUrl) {
@@ -31,9 +39,14 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
 
         const data = await response.json();
         setContenders(data);
+        setInitialContenders(data); // Store initial fetched songs for potential future bracket
       } catch (error: any) { // Use 'any' type for error for broader compatibility
         console.error('Error fetching songs:', error);
         setErrorMessage(error.message || 'Failed to load songs. Please try again later.');
+      } finally {
+        if (isLargePlaylistFetch) {
+          setIsPlaylistLoading(false); // End loading indicator
+        }
       }
     };
     fetchSongs();
@@ -69,6 +82,9 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
   }
 
   if (contenders.length === 0) {
+    if (isPlaylistLoading) {
+      return <div>Loading your playlist songs... this might take a moment!</div>;
+    }
     return <div>Loading songs...</div>;
   }
 
