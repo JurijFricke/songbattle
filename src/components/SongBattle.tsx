@@ -19,8 +19,8 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
     const fetchSongs = async () => {
       setErrorMessage(null); // Clear any previous errors
       setContenders([]); // Clear contenders when fetching new songs
-      const isLargePlaylistFetch = playlistUrl && songCount > 100; // Heuristic for large fetch
-      if (isLargePlaylistFetch) {
+      // Show loading indicator if a playlist URL is provided, regardless of songCount
+      if (playlistUrl) {
         setIsPlaylistLoading(true); // Start loading indicator
       }
 
@@ -42,7 +42,7 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
         console.error('Error fetching songs:', error);
         setErrorMessage(error.message || 'Failed to load songs. Please try again later.');
       } finally {
-        if (isLargePlaylistFetch) {
+        if (playlistUrl) { // Always stop loading if a playlist was involved
           setIsPlaylistLoading(false); // End loading indicator
         }
       }
