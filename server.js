@@ -230,9 +230,19 @@ app.get('/api/songs', async (req, res) => {
                 if (!clientAccessToken || spotifyApi.getAccessToken() !== clientAccessToken) {
                     await refreshClientAccessToken();
                 }
-                const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 100 }); // Fetch up to 100 tracks
+                let allPlaylistItems = [];
+                let offset = 0;
+                let hasMore = true;
+                const maxPlaylistFetch = 500; // Limit fetching to a reasonable number of tracks from a playlist
 
-                const playlistTracks = playlistData.body.items
+                while (hasMore && allPlaylistItems.length < maxPlaylistFetch) {
+                    const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 100, offset: offset });
+                    allPlaylistItems = allPlaylistItems.concat(playlistData.body.items);
+                    offset += playlistData.body.items.length;
+                    hasMore = playlistData.body.next !== null; // Check if there's a next page of results
+                }
+
+                const playlistTracks = allPlaylistItems
                     .filter(item => item && item.track) // Filter out null tracks
                     .map(item => ({
                         id: item.track.id,
