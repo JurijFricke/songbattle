@@ -27,21 +27,25 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({ initialSongs, matchResu
   return (
     <div className="bracket-container">
       <h3>Match Results:</h3>
-      {matchResults.map((match, index) => (
-        <div key={index} className="match-result">
-          <span className={match.song1.id === match.winnerId ? 'winner' : 'loser'}>
-            {match.song1.title} by {match.song1.artist}
-          </span>
-          {' vs '}
-          <span className={match.song2.id === match.winnerId ? 'winner' : 'loser'}>
-            {match.song2.title} by {match.song2.artist}
-          </span>
-          {' -> Winner: '}
-          <span>
-            {matchResults.find(m => m.winnerId === match.winnerId)?.song1.title || matchResults.find(m => m.winnerId === match.winnerId)?.song2.title}
-          </span>
-        </div>
-      ))}
+      {matchResults.map((match, index) => {
+        const winnerSong = match.song1.id === match.winnerId ? match.song1 : match.song2;
+        const loserSong = match.song1.id === match.winnerId ? match.song2 : match.song1;
+        return (
+          <div key={index} className="match-result">
+            <span className={match.song1.id === match.winnerId ? 'winner' : 'loser'}>
+              {match.song1.title} by {match.song1.artist}
+            </span>
+            {' vs '}
+            <span className={match.song2.id === match.winnerId ? 'winner' : 'loser'}>
+              {match.song2.title} by {match.song2.artist}
+            </span>
+            {' -> Winner: '}
+            <span className="winner">
+              {winnerSong.title} by {winnerSong.artist}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 };
