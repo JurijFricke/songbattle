@@ -38,8 +38,8 @@ let clientAccessToken = null; // Store client credentials access token
 const SEARCH_QUERIES = [
     'top hits', 'pop', 'rock', 'indie', 'hip hop', 'r&b', 'electronic',
     'alternative', 'dance', 'chill', 'workout', 'happy', 'sad', 'love',
-    'motivation', 'focus', 'sleep', 'jazz', 'blues', 'classical', 'metal',
-    'country', 'folk', 'reggae', 'latin',
+    'motivation', 'focus', 'sleep', 'metal',
+    'latin',
 
     // German Music - Older Hits / Neue Deutsche Welle
     'deutscher pop 80er', 'neue deutsche welle',
@@ -69,11 +69,10 @@ const refreshClientAccessToken = async () => {
 // Function to fetch songs using diverse search queries
 const fetchSongsFromSearch = async () => {
     let allTracks = [];
-    for (let i = 0; i < 5; i++) { // Make 5 search requests
+      for (let i = 0; i < 10; i++) { // Make 10 search requests
         const randomQuery = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
         try {
-            const searchData = await spotifyApi.searchTracks(randomQuery, { limit: 50 });
-            allTracks = allTracks.concat(searchData.body.tracks.items);
+          const searchData = await spotifyApi.searchTracks(randomQuery, { limit: 100 }); // Fetch up to 100 tracks per request            allTracks = allTracks.concat(searchData.body.tracks.items);
         } catch (searchError) {
             console.warn(`Could not fetch tracks for query "${randomQuery}":`, searchError.message);
         }
