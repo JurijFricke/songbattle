@@ -12,19 +12,28 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
   const [nextContenders, setNextContenders] = useState<Song[]>([]);
   const [winner, setWinner] = useState<Song | null>(null);
   const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // New state for error messages
 
   useEffect(() => {
     const fetchSongs = async () => {
+      setErrorMessage(null); // Clear any previous errors
       try {
         let url = `https://songbattle-backend.onrender.com/api/songs?count=${songCount}`;
         if (playlistUrl) {
           url += `&playlistUrl=${encodeURIComponent(playlistUrl)}`;
         }
         const response = await fetch(url);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         setContenders(data);
-      } catch (error) {
+      } catch (error: any) { // Use 'any' type for error for broader compatibility
         console.error('Error fetching songs:', error);
+        setErrorMessage(error.message || 'Failed to load songs. Please try again later.');
       }
     };
     fetchSongs();
@@ -76,6 +85,21 @@ const SongBattle = ({ songCount, playlistUrl }: Props) => {
 
   return (
     <div>
+      {errorMessage && (
+        <div style={{
+          color: 'white',
+          backgroundColor: '#e63946', // Red background for error
+          padding: '15px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          fontSize: '1.1rem',
+          fontWeight: 'bold',
+          maxWidth: '600px',
+          margin: '0 auto 20px auto' // Center and add bottom margin
+        }}>
+          {errorMessage}
+        </div>
+      )}
       <h2>Round {round}</h2>
       {totalMatchupsInRound > 0 && (
         <h3>Matchup {currentMatchupNumber}/{totalMatchupsInRound}</h3>
