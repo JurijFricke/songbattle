@@ -17,6 +17,7 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // New state for error messages
   const [isPlaylistLoading, setIsPlaylistLoading] = useState(false); // New state for loading indicator
   const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null); // New state for vote feedback
+  const [isBattleLoading, setIsBattleLoading] = useState(false); // New state for battle transition loading
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -55,47 +56,51 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
 
   const handleVote = (selectedSong: Song) => {
     setLastClickedButtonId(selectedSong.id); // Set the ID of the clicked song
+    setIsBattleLoading(true); // Start battle loading indicator
 
-    const newNextContenders = [...nextContenders, selectedSong];
-    const nextBattleIndexCandidate = currentBattleIndex + 2;
+    // After a short delay to allow for visual feedback/DOM updates
+    setTimeout(() => {
+      setLastClickedButtonId(null); // Clear feedback before next battle starts
 
-    let updatedContenders = contenders;
-    let updatedRound = round;
-    let updatedNextContenders: Song[] = [];
-    let updatedCurrentBattleIndex = 0;
-    let nextGameWinner: Song | null = null;
+      const newNextContenders = [...nextContenders, selectedSong];
+      const nextBattleIndexCandidate = currentBattleIndex + 2;
 
-    if (nextBattleIndexCandidate < contenders.length) {
-      // Still in the current round
-      updatedCurrentBattleIndex = nextBattleIndexCandidate;
-      updatedNextContenders = newNextContenders;
-    } else {
-      // End of a round or game
-      if (newNextContenders.length === 1) {
-        // Game over, winner found
-        nextGameWinner = newNextContenders[0];
+      let updatedContenders = contenders;
+      let updatedRound = round;
+      let updatedNextContenders: Song[] = [];
+      let updatedCurrentBattleIndex = 0;
+      let nextGameWinner: Song | null = null;
+
+      if (nextBattleIndexCandidate < contenders.length) {
+        // Still in the current round
+        updatedCurrentBattleIndex = nextBattleIndexCandidate;
+        updatedNextContenders = newNextContenders;
       } else {
-        // Advance to next round
-        updatedRound = round + 1;
-        updatedContenders = newNextContenders; // Winners of this round become contenders for the next
-        updatedCurrentBattleIndex = 0;
-        // updatedNextContenders remains []
+        // End of a round or game
+        if (newNextContenders.length === 1) {
+          // Game over, winner found
+          nextGameWinner = newNextContenders[0];
+        } else {
+          // Advance to next round
+          updatedRound = round + 1;
+          updatedContenders = newNextContenders; // Winners of this round become contenders for the next
+          updatedCurrentBattleIndex = 0;
+          // updatedNextContenders remains []
+        }
       }
-    }
 
-    // Update all states together after calculating the next state
-    setContenders(updatedContenders);
-    setRound(updatedRound);
-    setNextContenders(updatedNextContenders);
-    setCurrentBattleIndex(updatedCurrentBattleIndex);
-    setWinner(nextGameWinner); // This will be null unless a winner is found
+      // Update all states together after calculating the next state
+      setContenders(updatedContenders);
+      setRound(updatedRound);
+      setNextContenders(updatedNextContenders);
+      setCurrentBattleIndex(updatedCurrentBattleIndex);
+      setWinner(nextGameWinner); // This will be null unless a winner is found
 
-    // Clear feedback for next round after a short delay, but not before content updates
-    if (!nextGameWinner) { // Only clear if game is not over
-        setTimeout(() => {
-            setLastClickedButtonId(null);
-        }, 500); // Duration to show visual feedback
-    }
+      // End battle loading indicator after all state updates are batched and processed
+      setTimeout(() => {
+        setIsBattleLoading(false);
+      }, 50); // Small delay to ensure React has rendered new content
+    }, 300); // Duration to show visual feedback / brief "loading" state
   };
 
   if (winner) {
@@ -157,26 +162,31 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
           label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`}
         />
       )}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-        <div style={{ width: '450px' }}>
-          <div dangerouslySetInnerHTML={{ __html: song1.embed }} />
-          <button
-            onClick={() => handleVote(song1)}
-            className={`vote-button ${lastClickedButtonId === song1.id ? 'voted-button' : ''}`}
-          >
-            Vote
-          </button>
+
+      {isBattleLoading ? (
+        <div style={{ marginTop: '50px', fontSize: '1.5rem', color: '#555' }}>Loading next battle...</div>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+          <div style={{ width: '450px' }}>
+            <div dangerouslySetInnerHTML={{ __html: song1.embed }} />
+            <button
+              onClick={() => handleVote(song1)}
+              className={`vote-button ${lastClickedButtonId === song1.id ? 'voted-button' : ''}`}
+            >
+              Vote
+            </button>
+          </div>
+          <div style={{ width: '450px' }}>
+            <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
+            <button
+              onClick={() => handleVote(song2)}
+              className={`vote-button ${lastClickedButtonId === song2.id ? 'voted-button' : ''}`}
+            >
+              Vote
+            </button>
+          </div>
         </div>
-        <div style={{ width: '450px' }}>
-          <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
-          <button
-            onClick={() => handleVote(song2)}
-            className={`vote-button ${lastClickedButtonId === song2.id ? 'voted-button' : ''}`}
-          >
-            Vote
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
