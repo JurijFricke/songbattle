@@ -165,7 +165,7 @@ const populateSongsPool = async () => {
 
                 artist: item.artists.map((artist) => artist.name).join(', '),
 
-                embed: `<iframe src="https://open.spotify.com/embed/track/${item.id}" width="100%" height="352" frameBorder="0"></iframe>`,
+                embed: `<iframe src="https://open.spotify.com/embed/track/${item.id}?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
 
             }));
 
