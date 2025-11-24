@@ -158,34 +158,36 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
       {isBattleLoading ? (
         <div style={{ marginTop: '50px', fontSize: '1.5rem', color: '#555' }}>Loading next battle...</div>
       ) : (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-          <div style={{ width: '450px' }}>
-            <div dangerouslySetInnerHTML={{ __html: song1.embed }} />
-            <button
-              onClick={() => handleVote(song1)}
-              className={`vote-button ${lastClickedButtonId === song1.id ? 'voted-button' : ''}`}
-            >
-              Vote
-            </button>
+        <>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+            <div style={{ width: '450px' }}>
+              <div dangerouslySetInnerHTML={{ __html: song1.embed }} />
+              <button
+                onClick={() => handleVote(song1)}
+                className={`vote-button ${lastClickedButtonId === song1.id ? 'voted-button' : ''}`}
+              >
+                Vote
+              </button>
+            </div>
+            <div style={{ width: '450px' }}>
+              <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
+              <button
+                onClick={() => handleVote(song2)}
+                className={`vote-button ${lastClickedButtonId === song2.id ? 'voted-button' : ''}`}
+              >
+                Vote
+              </button>
+            </div>
           </div>
-          <div style={{ width: '450px' }}>
-            <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
-            <button
-              onClick={() => handleVote(song2)}
-              className={`vote-button ${lastClickedButtonId === song2.id ? 'voted-button' : ''}`}
-            >
-              Vote
-            </button>
-          </div>
-        </div>
-      )}
-      <h2>Round {round}</h2>
-      {totalMatchupsInRound > 0 && (
-        <ProgressBar
-          current={currentMatchupNumber}
-          total={totalMatchupsInRound}
-          label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`}
-        />
+          <h2>Round {round}</h2>
+          {totalMatchupsInRound > 0 && (
+            <ProgressBar
+              current={currentMatchupNumber}
+              total={totalMatchupsInRound}
+              label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`}
+            />
+          )}
+        </>
       )}
     </div>
   );
