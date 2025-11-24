@@ -154,14 +154,6 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
           {errorMessage}
         </div>
       )}
-      <h2>Round {round}</h2>
-      {totalMatchupsInRound > 0 && (
-        <ProgressBar
-          current={currentMatchupNumber}
-          total={totalMatchupsInRound}
-          label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`}
-        />
-      )}
 
       {isBattleLoading ? (
         <div style={{ marginTop: '50px', fontSize: '1.5rem', color: '#555' }}>Loading next battle...</div>
@@ -186,6 +178,14 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
             </button>
           </div>
         </div>
+      )}
+      <h2>Round {round}</h2>
+      {totalMatchupsInRound > 0 && (
+        <ProgressBar
+          current={currentMatchupNumber}
+          total={totalMatchupsInRound}
+          label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`}
+        />
       )}
     </div>
   );
