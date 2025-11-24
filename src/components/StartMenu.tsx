@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 interface Props {
   startGame: (songCount: number, playlistUrl?: string) => void;
+  initialPlaylistUrl?: string;
 }
 
 const StartMenu = ({ startGame, initialPlaylistUrl }: Props) => {
