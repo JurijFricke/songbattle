@@ -56,28 +56,42 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
   const handleVote = (selectedSong: Song) => {
     setLastClickedButtonId(selectedSong.id); // Set the ID of the clicked song
 
-    // State updates for next battle
     const newNextContenders = [...nextContenders, selectedSong];
-    const nextBattleIndex = currentBattleIndex + 2;
+    const nextBattleIndexCandidate = currentBattleIndex + 2;
 
-    let nextWinner: Song | null = null; // Use a local variable to check winner before setState batch
+    let updatedContenders = contenders;
+    let updatedRound = round;
+    let updatedNextContenders: Song[] = [];
+    let updatedCurrentBattleIndex = 0;
+    let nextGameWinner: Song | null = null;
 
-    if (nextBattleIndex < contenders.length) {
-      setCurrentBattleIndex(nextBattleIndex);
+    if (nextBattleIndexCandidate < contenders.length) {
+      // Still in the current round
+      updatedCurrentBattleIndex = nextBattleIndexCandidate;
+      updatedNextContenders = newNextContenders;
     } else {
+      // End of a round or game
       if (newNextContenders.length === 1) {
-        nextWinner = newNextContenders[0];
-        setWinner(nextWinner);
+        // Game over, winner found
+        nextGameWinner = newNextContenders[0];
       } else {
-        setRound(round + 1);
-        setContenders(newNextContenders);
-        setNextContenders([]);
-        setCurrentBattleIndex(0);
+        // Advance to next round
+        updatedRound = round + 1;
+        updatedContenders = newNextContenders; // Winners of this round become contenders for the next
+        updatedCurrentBattleIndex = 0;
+        // updatedNextContenders remains []
       }
     }
 
+    // Update all states together after calculating the next state
+    setContenders(updatedContenders);
+    setRound(updatedRound);
+    setNextContenders(updatedNextContenders);
+    setCurrentBattleIndex(updatedCurrentBattleIndex);
+    setWinner(nextGameWinner); // This will be null unless a winner is found
+
     // Clear feedback for next round after a short delay, but not before content updates
-    if (!nextWinner) { // Only clear if game is not over
+    if (!nextGameWinner) { // Only clear if game is not over
         setTimeout(() => {
             setLastClickedButtonId(null);
         }, 500); // Duration to show visual feedback
