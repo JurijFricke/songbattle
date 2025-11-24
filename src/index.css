@@ -202,4 +202,5 @@ code {
   align-self: center; /* Center vertically in the flex container */
   margin: 0 20px; /* Space on left and right */
   white-space: nowrap; /* Prevent "VS." from wrapping */
+  transform: translateY(-15%); /* Nudge upwards to align visual middle */
 }
