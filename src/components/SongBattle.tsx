@@ -59,19 +59,21 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
 
     setIsFading(true); // Start fade-out
 
+    // After fade-out completes (500ms)
     setTimeout(() => {
       setLastClickedButtonId(null); // Clear feedback before next battle starts
 
       const newNextContenders = [...nextContenders, selectedSong];
-      setNextContenders(newNextContenders);
-
       const nextBattleIndex = currentBattleIndex + 2;
+
+      let nextWinner: Song | null = null; // Use a local variable to check winner before setState batch
 
       if (nextBattleIndex < contenders.length) {
         setCurrentBattleIndex(nextBattleIndex);
       } else {
         if (newNextContenders.length === 1) {
-          setWinner(newNextContenders[0]);
+          nextWinner = newNextContenders[0];
+          setWinner(nextWinner);
         } else {
           setRound(round + 1);
           setContenders(newNextContenders);
@@ -79,8 +81,16 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
           setCurrentBattleIndex(0);
         }
       }
-      setIsFading(false); // End fade-out, start fade-in
-    }, 500); // Match CSS transition duration
+
+      // Only fade-in if the game is NOT over
+      if (!nextWinner) {
+        // Allow a very short moment for React to render the new contenders before fading them in
+        setTimeout(() => {
+          setIsFading(false); // End fade-out, start fade-in
+        }, 50); // Small delay
+      }
+
+    }, 500); // Duration of the fade-out transition
   };
 
   if (winner) {
