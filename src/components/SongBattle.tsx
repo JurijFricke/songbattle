@@ -16,7 +16,6 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
   const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // New state for error messages
   const [isPlaylistLoading, setIsPlaylistLoading] = useState(false); // New state for loading indicator
-  const [isFading, setIsFading] = useState(false); // New state for fade transition
   const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null); // New state for vote feedback
 
   useEffect(() => {
@@ -57,40 +56,32 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
   const handleVote = (selectedSong: Song) => {
     setLastClickedButtonId(selectedSong.id); // Set the ID of the clicked song
 
-    setIsFading(true); // Start fade-out
+    // State updates for next battle
+    const newNextContenders = [...nextContenders, selectedSong];
+    const nextBattleIndex = currentBattleIndex + 2;
 
-    // After fade-out completes (500ms)
-    setTimeout(() => {
-      setLastClickedButtonId(null); // Clear feedback before next battle starts
+    let nextWinner: Song | null = null; // Use a local variable to check winner before setState batch
 
-      const newNextContenders = [...nextContenders, selectedSong];
-      const nextBattleIndex = currentBattleIndex + 2;
-
-      let nextWinner: Song | null = null; // Use a local variable to check winner before setState batch
-
-      if (nextBattleIndex < contenders.length) {
-        setCurrentBattleIndex(nextBattleIndex);
+    if (nextBattleIndex < contenders.length) {
+      setCurrentBattleIndex(nextBattleIndex);
+    } else {
+      if (newNextContenders.length === 1) {
+        nextWinner = newNextContenders[0];
+        setWinner(nextWinner);
       } else {
-        if (newNextContenders.length === 1) {
-          nextWinner = newNextContenders[0];
-          setWinner(nextWinner);
-        } else {
-          setRound(round + 1);
-          setContenders(newNextContenders);
-          setNextContenders([]);
-          setCurrentBattleIndex(0);
-        }
+        setRound(round + 1);
+        setContenders(newNextContenders);
+        setNextContenders([]);
+        setCurrentBattleIndex(0);
       }
+    }
 
-      // Only fade-in if the game is NOT over
-      if (!nextWinner) {
-        // Allow a very short moment for React to render the new contenders before fading them in
+    // Clear feedback for next round after a short delay, but not before content updates
+    if (!nextWinner) { // Only clear if game is not over
         setTimeout(() => {
-          setIsFading(false); // End fade-out, start fade-in
-        }, 50); // Small delay
-      }
-
-    }, 500); // Duration of the fade-out transition
+            setLastClickedButtonId(null);
+        }, 500); // Duration to show visual feedback
+    }
   };
 
   if (winner) {
@@ -152,7 +143,7 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
           label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`}
         />
       )}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }} className={isFading ? 'fade-out' : 'fade-in'}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
         <div style={{ width: '450px' }}>
           <div dangerouslySetInnerHTML={{ __html: song1.embed }} />
           <button

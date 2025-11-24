@@ -186,16 +186,7 @@ code {
   font-weight: bold;
 }
 
-/* Fade Transitions */
-.fade-out {
-  opacity: 0;
-  transition: opacity 0.5s ease-out;
-}
 
-.fade-in {
-  opacity: 1;
-  transition: opacity 0.5s ease-in;
-}
 
 /* Voted Button Feedback */
 .voted-button {
