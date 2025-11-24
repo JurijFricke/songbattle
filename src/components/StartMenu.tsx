@@ -4,9 +4,13 @@ interface Props {
   startGame: (songCount: number, playlistUrl?: string) => void;
 }
 
-const StartMenu = ({ startGame }: Props) => {
+const StartMenu = ({ startGame, initialPlaylistUrl }: Props) => {
   const [songCount, setSongCount] = useState(16);
-  const [playlistUrl, setPlaylistUrl] = useState('');
+  const [playlistUrl, setPlaylistUrl] = useState(initialPlaylistUrl || '');
+
+  useEffect(() => {
+    setPlaylistUrl(initialPlaylistUrl || '');
+  }, [initialPlaylistUrl]);
 
   return (
     <div>
