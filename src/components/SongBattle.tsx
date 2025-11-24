@@ -169,6 +169,7 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
                 Vote
               </button>
             </div>
+            <div className="vs-text">VS.</div> {/* Added VS. text */}
             <div style={{ width: '450px' }}>
               <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
               <button

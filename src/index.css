@@ -193,3 +193,13 @@ code {
   box-shadow: 0 0 15px 5px rgba(29, 185, 84, 0.7); /* Green glow effect */
   transform: scale(1.02); /* Slightly grow */
 }
+
+/* VS. Text Styling */
+.vs-text {
+  font-size: 4rem; /* Large font size */
+  font-weight: bold;
+  color: #555; /* Dark grey */
+  align-self: center; /* Center vertically in the flex container */
+  margin: 0 20px; /* Space on left and right */
+  white-space: nowrap; /* Prevent "VS." from wrapping */
+}
