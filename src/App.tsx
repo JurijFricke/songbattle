@@ -15,7 +15,6 @@ function App() {
 
   const resetGame = () => {
     setGameStarted(false);
-    setSelectedPlaylistUrl(undefined); // Clear playlist URL for next game
   };
 
   return (
