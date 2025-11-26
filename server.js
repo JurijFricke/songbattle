@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const SpotifyWebApi = require('spotify-web-api-node');
 const fs = require('fs').promises; // Import fs.promises for async file operations
-
 const app = express();
 const port = 3001;
 
