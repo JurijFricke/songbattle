@@ -60,22 +60,18 @@ let songsPool = []; // This will hold our large pool of unique songs from divers
 let clientAccessToken = null; // Store client credentials access token
 
 const SEARCH_QUERIES = [
-    'top hits', 'pop', 'rock', 'indie', 'hip hop', 'r&b', 'electronic',
-    'alternative', 'dance', 'chill', 'workout', 'happy', 'sad', 'love',
-    'motivation', 'focus', 'sleep', 'metal',
-    'latin',
+    // International Genres
+    'genre:pop', 'genre:rock', 'genre:indie', 'genre:hip-hop', 'genre:r-n-b',
+    'genre:electronic', 'genre:alternative', 'genre:dance', 'genre:metal',
+    'genre:latin', 'genre:soul', 'genre:jazz', 'genre:blues', 'genre:reggae',
+    'genre:funk', 'genre:classical', 'genre:country', 'genre:folk', 'genre:disco',
 
-    // German Music - Older Hits / Neue Deutsche Welle
-    'deutscher pop 80er', 'neue deutsche welle',
+    // German Genres
+    'genre:german', 'genre:german-hip-hop', 'genre:neue-deutsche-welle', 'genre:techno',
+    'genre:german-indie', 'genre:deutschrock',
 
-    // German Music - Hip-Hop
-    'deutscher hip hop', 'deutschrap', 'underground deutschrap',
-
-    // German Music - Radio Pop
-    'deutscher radio pop', 'aktuelle deutsche hits',
-
-    // General German genres with diversity in mind
-    'german indie', 'german alternative', 'deutscher soul', 'german rock', 'deutscher pop', 'deutsche lieder'
+    // Generic popular searches
+    'top hits'
 ];
 
 // Function to get an app-level access token
