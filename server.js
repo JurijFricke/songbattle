@@ -97,7 +97,8 @@ const fetchSongsFromSearch = async () => {
     for (let i = 0; i < 15; i++) { // Make 15 search requests
         const randomQuery = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
         try {
-            const searchData = await spotifyApi.searchTracks(randomQuery, { limit: 50 }); // Fetch up to 50 tracks per request            allTracks = allTracks.concat(searchData.body.tracks.items);
+            const searchData = await spotifyApi.searchTracks(randomQuery, { limit: 50 }); // Fetch up to 50 tracks per request
+            allTracks = allTracks.concat(searchData.body.tracks.items);
         } catch (searchError) {
             console.warn(`Could not fetch tracks for query "${randomQuery}":`, searchError.message);
         }
