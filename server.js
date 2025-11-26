@@ -62,12 +62,12 @@ let clientAccessToken = null; // Store client credentials access token
 const SEARCH_QUERIES = [
     // International Genres
     'genre:pop', 'genre:rock', 'genre:indie', 'genre:hip-hop', 'genre:r-n-b',
-    'genre:electronic', 'genre:alternative', 'genre:dance', 'genre:metal',
-    'genre:latin', 'genre:soul', 'genre:jazz', 'genre:blues', 'genre:reggae',
-    'genre:funk', 'genre:classical', 'genre:country', 'genre:folk', 'genre:disco',
+    'genre:alternative', 'genre:dance', 'genre:metal',
+    'genre:latin', 'genre:soul', 'genre:reggae',
+    'genre:country', 'genre:folk', 'genre:disco',
 
     // German Genres
-    'genre:german', 'genre:german-hip-hop', 'genre:neue-deutsche-welle', 'genre:techno',
+    'genre:german', 'genre:german-hip-hop', 'genre:neue-deutsche-welle',
     'genre:german-indie', 'genre:deutschrock',
 
     // Generic popular searches
