@@ -22,17 +22,34 @@ const refreshClientAccessToken = async () => {
 };
 
 const fetchSongsFromSearch = async () => {
-    let allTracks = [];
-    for (let i = 0; i < 15; i++) {
-        const randomQuery = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
-        try {
-            const searchData = await spotifyApi.searchTracks(randomQuery, { limit: 50 });
-            allTracks = allTracks.concat(searchData.body.tracks.items);
-        } catch (searchError) {
-            console.warn(`Could not fetch tracks for query "${randomQuery}":`, searchError.message);
-        }
+    // 1. Create an array of 15 random queries
+    const randomQueries = Array.from({ length: 15 }, () =>
+        SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)]
+    );
+
+    // 2. Map queries to an array of promises
+    const searchPromises = randomQueries.map(query =>
+        spotifyApi.searchTracks(query, { limit: 50 })
+            .catch(err => {
+                console.warn(`Could not fetch tracks for query "${query}":`, err.message);
+                return null; // Return null on error to not break Promise.all
+            })
+    );
+
+    try {
+        // 3. Execute all promises in parallel
+        const searchResults = await Promise.all(searchPromises);
+
+        // 4. Process the results
+        const allTracks = searchResults
+            .filter(result => result !== null) // Filter out failed requests
+            .flatMap(result => result.body.tracks.items); // Use flatMap to get all tracks in a single array
+
+        return allTracks;
+    } catch (error) {
+        console.error('An unexpected error occurred during parallel song fetching:', error);
+        return []; // Return an empty array in case of an unexpected failure
     }
-    return allTracks;
 };
 
 const populateSongsPool = async () => {
