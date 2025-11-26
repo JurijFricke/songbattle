@@ -1,5 +1,5 @@
 const SpotifyWebApi = require('spotify-web-api-node');
-const { SEARCH_QUERIES } = require('./config');
+const { SEARCH_QUERIES, MAX_SONG_DURATION_MS } = require('./config');
 const { readCache, writeCache } = require('./cache');
 
 const spotifyApi = new SpotifyWebApi({
@@ -70,10 +70,13 @@ const populateSongsPool = async () => {
     try {
         const freshTracks = await fetchSongsFromSearch();
         if (freshTracks && freshTracks.length > 0) {
-            const uniqueTracks = freshTracks.filter(
+            let uniqueTracks = freshTracks.filter(
                 (item, index, self) =>
                 item && item.id && self.findIndex((t) => t && t.id === item.id) === index
             );
+
+            // Filter out tracks that are too long (likely audiobooks/podcasts)
+            uniqueTracks = uniqueTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
 
             const newSongsPool = uniqueTracks.map((item) => ({
                 id: item.id,
@@ -128,7 +131,7 @@ const getSongsForBattle = async (count, playlistUrl) => {
                 }
 
                 const playlistTracks = allPlaylistItems
-                    .filter(item => item && item.track)
+                    .filter(item => item && item.track && item.track.duration_ms < MAX_SONG_DURATION_MS) // Filter out nulls and long tracks
                     .map(item => ({
                         id: item.track.id,
                         title: item.track.name,

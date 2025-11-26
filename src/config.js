@@ -15,9 +15,11 @@ const SEARCH_QUERIES = [
 
 const CACHE_FILE = 'cached_songs.json';
 const REFRESH_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
+const MAX_SONG_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 
 module.exports = {
     SEARCH_QUERIES,
     CACHE_FILE,
     REFRESH_INTERVAL,
+    MAX_SONG_DURATION_MS,
 };
