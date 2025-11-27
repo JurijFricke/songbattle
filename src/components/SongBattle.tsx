@@ -1,22 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Song } from '../types/Song';
-import ProgressBar from './ProgressBar'; // Import ProgressBar component
+import ProgressBar from './ProgressBar';
 
 interface Props {
   songCount: number;
   playlistUrl?: string;
-  decade?: string; // Add decade to props
+  decade?: string;
   resetGame: () => void;
 }
 
 const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
   const [round, setRound] = useState(1);
   const [contenders, setContenders] = useState<Song[]>([]);
-  // ... (rest of the state declarations) ...
+  const [nextContenders, setNextContenders] = useState<Song[]>([]);
+  const [winner, setWinner] = useState<Song | null>(null);
+  const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPlaylistLoading, setIsPlaylistLoading] = useState(false);
+  const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null);
+  const [isBattleLoading, setIsBattleLoading] = useState(false);
 
   useEffect(() => {
     const fetchSongs = async () => {
-      // ... (error and loading state setup) ...
+      setErrorMessage(null);
+      setContenders([]);
+      if (playlistUrl || decade) {
+        setIsPlaylistLoading(true);
+      }
 
       try {
         let url = `https://songbattle-backend.onrender.com/api/songs?count=${songCount}`;
@@ -26,22 +36,32 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
           url += `&decade=${decade}`;
         }
         const response = await fetch(url);
-        // ... (rest of the fetch logic) ...
-      } catch (error: any) { // Use 'any' type for error for broader compatibility
-        // ...
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setContenders(data);
+      } catch (error: any) {
+        console.error('Error fetching songs:', error);
+        setErrorMessage(error.message || 'Failed to load songs. Please try again later.');
       } finally {
-        // ...
+        if (playlistUrl || decade) {
+          setIsPlaylistLoading(false);
+        }
       }
     };
     fetchSongs();
-  }, [songCount, playlistUrl, decade]); // Add decade to dependency array
-  // ... (rest of the component) ...
-    setLastClickedButtonId(selectedSong.id); // Set the ID of the clicked song
-    setIsBattleLoading(true); // Start battle loading indicator
+  }, [songCount, playlistUrl, decade]);
 
-    // After a short delay to allow for visual feedback/DOM updates
+  const handleVote = (selectedSong: Song) => {
+    setLastClickedButtonId(selectedSong.id);
+    setIsBattleLoading(true);
+
     setTimeout(() => {
-      setLastClickedButtonId(null); // Clear feedback before next battle starts
+      setLastClickedButtonId(null);
 
       const newNextContenders = [...nextContenders, selectedSong];
       const nextBattleIndexCandidate = currentBattleIndex + 2;
@@ -53,35 +73,28 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
       let nextGameWinner: Song | null = null;
 
       if (nextBattleIndexCandidate < contenders.length) {
-        // Still in the current round
         updatedCurrentBattleIndex = nextBattleIndexCandidate;
         updatedNextContenders = newNextContenders;
       } else {
-        // End of a round or game
         if (newNextContenders.length === 1) {
-          // Game over, winner found
           nextGameWinner = newNextContenders[0];
         } else {
-          // Advance to next round
           updatedRound = round + 1;
-          updatedContenders = newNextContenders; // Winners of this round become contenders for the next
+          updatedContenders = newNextContenders;
           updatedCurrentBattleIndex = 0;
-          // updatedNextContenders remains []
         }
       }
 
-      // Update all states together after calculating the next state
       setContenders(updatedContenders);
       setRound(updatedRound);
       setNextContenders(updatedNextContenders);
       setCurrentBattleIndex(updatedCurrentBattleIndex);
-      setWinner(nextGameWinner); // This will be null unless a winner is found
+      setWinner(nextGameWinner);
 
-      // End battle loading indicator after all state updates are batched and processed
       setTimeout(() => {
         setIsBattleLoading(false);
-      }, 50); // Small delay to ensure React has rendered new content
-    }, 300); // Duration to show visual feedback / brief "loading" state
+      }, 50);
+    }, 300);
   };
 
   if (winner) {
@@ -114,7 +127,6 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
   const currentMatchupNumber = (currentBattleIndex / 2) + 1;
 
   if (!song1 || !song2) {
-    // This should ideally not happen if logic is correct, but keep as safeguard
     return <div>Preparing next battle...</div>;
   }
 
@@ -123,14 +135,14 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
       {errorMessage && (
         <div style={{
           color: 'white',
-          backgroundColor: '#e63946', // Red background for error
+          backgroundColor: '#e63946',
           padding: '15px',
           borderRadius: '8px',
           marginBottom: '20px',
           fontSize: '1.1rem',
           fontWeight: 'bold',
           maxWidth: '600px',
-          margin: '0 auto 20px auto' // Center and add bottom margin
+          margin: '0 auto 20px auto'
         }}>
           {errorMessage}
         </div>
@@ -150,7 +162,7 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
                 Vote
               </button>
             </div>
-            <div className="vs-text">VS.</div> {/* Added VS. text */}
+            <div className="vs-text">VS.</div>
             <div style={{ width: '450px' }}>
               <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
               <button
