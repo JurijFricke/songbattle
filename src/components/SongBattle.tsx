@@ -11,7 +11,15 @@ interface Props {
 }
 
 const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
-  // ... (state declarations)
+  const [round, setRound] = useState(1);
+  const [contenders, setContenders] = useState<Song[]>([]);
+  const [nextContenders, setNextContenders] = useState<Song[]>([]);
+  const [winner, setWinner] = useState<Song | null>(null);
+  const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPlaylistLoading, setIsPlaylistLoading] = useState(false);
+  const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null);
+  const [isBattleLoading, setIsBattleLoading] = useState(false);
 
   useEffect(() => {
     const loadSongs = async () => {
