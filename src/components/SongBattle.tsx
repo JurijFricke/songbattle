@@ -1,37 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Song } from '../types/Song';
-import ProgressBar from './ProgressBar'; // Import ProgressBar component
+import ProgressBar from './ProgressBar';
 
 interface Props {
   songCount: number;
-  playlistUrl?: string; // Add playlistUrl to props
-  resetGame: () => void; // New prop for resetting the game
+  playlistUrl?: string;
+  decade?: string;
+  resetGame: () => void;
 }
 
-const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
+const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
   const [round, setRound] = useState(1);
   const [contenders, setContenders] = useState<Song[]>([]);
   const [nextContenders, setNextContenders] = useState<Song[]>([]);
   const [winner, setWinner] = useState<Song | null>(null);
   const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // New state for error messages
-  const [isPlaylistLoading, setIsPlaylistLoading] = useState(false); // New state for loading indicator
-  const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null); // New state for vote feedback
-  const [isBattleLoading, setIsBattleLoading] = useState(false); // New state for battle transition loading
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPlaylistLoading, setIsPlaylistLoading] = useState(false);
+  const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null);
+  const [isBattleLoading, setIsBattleLoading] = useState(false);
 
   useEffect(() => {
     const fetchSongs = async () => {
-      setErrorMessage(null); // Clear any previous errors
-      setContenders([]); // Clear contenders when fetching new songs
-      // Show loading indicator if a playlist URL is provided, regardless of songCount
-      if (playlistUrl) {
-        setIsPlaylistLoading(true); // Start loading indicator
+      setErrorMessage(null);
+      setContenders([]);
+      if (playlistUrl || decade) {
+        setIsPlaylistLoading(true);
       }
 
       try {
-        let url = `https://songbattle-backend.onrender.com/api/songs?count=${songCount}`;
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://songbattle-backend.onrender.com';
+        let url = `${backendUrl}/api/songs?count=${songCount}`;
         if (playlistUrl) {
           url += `&playlistUrl=${encodeURIComponent(playlistUrl)}`;
+        } else if (decade) {
+          url += `&decade=${decade}`;
         }
         const response = await fetch(url);
 
@@ -41,26 +44,28 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
         }
 
         const data = await response.json();
-        setContenders(data);
-      } catch (error: any) { // Use 'any' type for error for broader compatibility
+        if (data.warning) {
+          alert(data.warning); // Display warning as a browser pop-up
+        }
+        setContenders(data.songs);
+      } catch (error: any) {
         console.error('Error fetching songs:', error);
         setErrorMessage(error.message || 'Failed to load songs. Please try again later.');
       } finally {
-        if (playlistUrl) { // Always stop loading if a playlist was involved
-          setIsPlaylistLoading(false); // End loading indicator
+        if (playlistUrl || decade) {
+          setIsPlaylistLoading(false);
         }
       }
     };
     fetchSongs();
-  }, [songCount, playlistUrl]);
+  }, [songCount, playlistUrl, decade]);
 
   const handleVote = (selectedSong: Song) => {
-    setLastClickedButtonId(selectedSong.id); // Set the ID of the clicked song
-    setIsBattleLoading(true); // Start battle loading indicator
+    setLastClickedButtonId(selectedSong.id);
+    setIsBattleLoading(true);
 
-    // After a short delay to allow for visual feedback/DOM updates
     setTimeout(() => {
-      setLastClickedButtonId(null); // Clear feedback before next battle starts
+      setLastClickedButtonId(null);
 
       const newNextContenders = [...nextContenders, selectedSong];
       const nextBattleIndexCandidate = currentBattleIndex + 2;
@@ -72,35 +77,28 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
       let nextGameWinner: Song | null = null;
 
       if (nextBattleIndexCandidate < contenders.length) {
-        // Still in the current round
         updatedCurrentBattleIndex = nextBattleIndexCandidate;
         updatedNextContenders = newNextContenders;
       } else {
-        // End of a round or game
         if (newNextContenders.length === 1) {
-          // Game over, winner found
           nextGameWinner = newNextContenders[0];
         } else {
-          // Advance to next round
           updatedRound = round + 1;
-          updatedContenders = newNextContenders; // Winners of this round become contenders for the next
+          updatedContenders = newNextContenders;
           updatedCurrentBattleIndex = 0;
-          // updatedNextContenders remains []
         }
       }
 
-      // Update all states together after calculating the next state
       setContenders(updatedContenders);
       setRound(updatedRound);
       setNextContenders(updatedNextContenders);
       setCurrentBattleIndex(updatedCurrentBattleIndex);
-      setWinner(nextGameWinner); // This will be null unless a winner is found
+      setWinner(nextGameWinner);
 
-      // End battle loading indicator after all state updates are batched and processed
       setTimeout(() => {
         setIsBattleLoading(false);
-      }, 50); // Small delay to ensure React has rendered new content
-    }, 300); // Duration to show visual feedback / brief "loading" state
+      }, 50);
+    }, 300);
   };
 
   if (winner) {
@@ -133,7 +131,6 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
   const currentMatchupNumber = (currentBattleIndex / 2) + 1;
 
   if (!song1 || !song2) {
-    // This should ideally not happen if logic is correct, but keep as safeguard
     return <div>Preparing next battle...</div>;
   }
 
@@ -142,14 +139,14 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
       {errorMessage && (
         <div style={{
           color: 'white',
-          backgroundColor: '#e63946', // Red background for error
+          backgroundColor: '#e63946',
           padding: '15px',
           borderRadius: '8px',
           marginBottom: '20px',
           fontSize: '1.1rem',
           fontWeight: 'bold',
           maxWidth: '600px',
-          margin: '0 auto 20px auto' // Center and add bottom margin
+          margin: '0 auto 20px auto'
         }}>
           {errorMessage}
         </div>
@@ -169,7 +166,7 @@ const SongBattle = ({ songCount, playlistUrl, resetGame }: Props) => {
                 Vote
               </button>
             </div>
-            <div className="vs-text">VS.</div> {/* Added VS. text */}
+            <div className="vs-text">VS.</div>
             <div style={{ width: '450px' }}>
               <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
               <button
