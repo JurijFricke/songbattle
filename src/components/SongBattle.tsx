@@ -44,7 +44,10 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
         }
 
         const data = await response.json();
-        setContenders(data);
+        if (data.warning) {
+          alert(data.warning); // Display warning as a browser pop-up
+        }
+        setContenders(data.songs);
       } catch (error: any) {
         console.error('Error fetching songs:', error);
         setErrorMessage(error.message || 'Failed to load songs. Please try again later.');
