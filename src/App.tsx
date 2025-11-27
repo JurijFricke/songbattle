@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import StartMenu from './components/StartMenu';
 import SongBattle from './components/SongBattle';
+import styles from './App.module.css'; // Import the CSS module
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false);
@@ -20,7 +21,7 @@ function App() {
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '10px', backgroundColor: '#f0f0f0' }}>
+    <div className={styles.appContainer}>
       <h1>Song Battle</h1>
       {gameStarted ? (
         <SongBattle songCount={songCount} playlistUrl={selectedPlaylistUrl} decade={decade} resetGame={resetGame} />

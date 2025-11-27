@@ -1,0 +1,16 @@
+.startMenuSection {
+  margin-bottom: 20px;
+}
+
+.customSelect {
+  /* Default styles for select, currently defined in index.css */
+}
+
+.customInput {
+  /* Default styles for input, currently defined in index.css */
+}
+
+.startGameButton {
+  margin-top: 20px;
+  /* Default styles for start-game-button, currently defined in index.css */
+}

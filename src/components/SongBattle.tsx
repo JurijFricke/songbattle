@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Song } from '../types/Song';
-import ProgressBar from './ProgressBar'; // Import ProgressBar component
+import ProgressBar from './ProgressBar';
 import { fetchSongsAPI } from '../services/api';
+import styles from './SongBattle.module.css'; // Import the CSS module
 
 interface Props {
   songCount: number;
@@ -46,8 +47,6 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
     };
     loadSongs();
   }, [songCount, playlistUrl, decade]);
-
-  // ... (rest of the component)
 
   const handleVote = (selectedSong: Song) => {
     setLastClickedButtonId(selectedSong.id);
@@ -97,8 +96,7 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
         <div dangerouslySetInnerHTML={{ __html: winner.embed }} />
         <button
           onClick={resetGame}
-          className="start-game-button"
-          style={{ marginTop: '30px' }}
+          className={styles.playAgainButton}
         >
           Play Again
         </button>
@@ -126,41 +124,31 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
   return (
     <div>
       {errorMessage && (
-        <div style={{
-          color: 'white',
-          backgroundColor: '#e63946',
-          padding: '15px',
-          borderRadius: '8px',
-          marginBottom: '20px',
-          fontSize: '1.1rem',
-          fontWeight: 'bold',
-          maxWidth: '600px',
-          margin: '0 auto 20px auto'
-        }}>
+        <div className={styles.errorMessage}>
           {errorMessage}
         </div>
       )}
 
       {isBattleLoading ? (
-        <div style={{ marginTop: '50px', fontSize: '1.5rem', color: '#555' }}>Loading next battle...</div>
+        <div className={styles.battleLoading}>Loading next battle...</div>
       ) : (
         <>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-            <div style={{ width: '450px' }}>
+          <div className={styles.songBattleContainer}>
+            <div className={styles.songPanel}>
               <div dangerouslySetInnerHTML={{ __html: song1.embed }} />
               <button
                 onClick={() => handleVote(song1)}
-                className={`vote-button ${lastClickedButtonId === song1.id ? 'voted-button' : ''}`}
+                className={`${styles.voteButton} ${lastClickedButtonId === song1.id ? styles.votedButton : ''}`}
               >
                 Vote
               </button>
             </div>
-            <div className="vs-text">VS.</div>
-            <div style={{ width: '450px' }}>
+            <div className={styles.vsText}>VS.</div>
+            <div className={styles.songPanel}>
               <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
               <button
                 onClick={() => handleVote(song2)}
-                className={`vote-button ${lastClickedButtonId === song2.id ? 'voted-button' : ''}`}
+                className={`${styles.voteButton} ${lastClickedButtonId === song2.id ? styles.votedButton : ''}`}
               >
                 Vote
               </button>

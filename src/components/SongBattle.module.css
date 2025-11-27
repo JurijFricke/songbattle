@@ -1,0 +1,44 @@
+.errorMessage {
+  color: white;
+  background-color: #e63946; /* Red background for error */
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  max-width: 600px;
+  margin: 0 auto 20px auto; /* Center and add bottom margin */
+}
+
+.battleLoading {
+  margin-top: 50px;
+  font-size: 1.5rem;
+  color: #555;
+}
+
+.songBattleContainer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.songPanel {
+  width: 450px;
+}
+
+.vsText {
+  /* default styles for vs-text */
+}
+
+.voteButton {
+  /* default styles for vote-button */
+}
+
+.votedButton {
+  /* default styles for voted-button */
+}
+
+.playAgainButton {
+  margin-top: 30px;
+  /* default styles for start-game-button (reused) */
+}

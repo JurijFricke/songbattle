@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import styles from './StartMenu.module.css'; // Import the CSS module
 
 interface Props {
   startGame: (songCount: number, playlistUrl?: string, decade?: string) => void;
@@ -17,13 +18,13 @@ const StartMenu = ({ startGame, initialPlaylistUrl }: Props) => {
   return (
     <div>
       <h2>Start Menu</h2>
-      <div style={{ marginBottom: '20px' }}>
+      <div className={styles.startMenuSection}>
         <label htmlFor="song-count">Select number of songs:</label>
         <select
           id="song-count"
           value={songCount}
           onChange={(e) => setSongCount(parseInt(e.target.value))}
-          className="custom-select"
+          className={styles.customSelect}
         >
           <option value="16">16</option>
           <option value="32">32</option>
@@ -33,13 +34,13 @@ const StartMenu = ({ startGame, initialPlaylistUrl }: Props) => {
         </select>
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
+      <div className={styles.startMenuSection}>
         <label htmlFor="decade-select">Select Decade (optional):</label>
         <select
           id="decade-select"
           value={decade}
           onChange={(e) => setDecade(e.target.value)}
-          className="custom-select"
+          className={styles.customSelect}
           disabled={!!playlistUrl} // Disable if a playlist URL is entered
         >
           <option value="any">Any</option>
@@ -52,7 +53,7 @@ const StartMenu = ({ startGame, initialPlaylistUrl }: Props) => {
         </select>
       </div>
 
-      <div style={{ marginTop: '20px' }}>
+      <div className={styles.startMenuSection}>
         <label htmlFor="playlist-url">Or paste a Spotify Playlist URL (optional):</label>
         <input
           key="playlist-url-input"
@@ -61,10 +62,10 @@ const StartMenu = ({ startGame, initialPlaylistUrl }: Props) => {
           value={playlistUrl}
           onChange={(e) => setPlaylistUrl(e.target.value)}
           placeholder="e.g., https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
-          className="custom-input"
+          className={styles.customInput}
         />
       </div>
-      <button onClick={() => startGame(songCount, playlistUrl, decade)} className="start-game-button" style={{ marginTop: '20px' }}>
+      <button onClick={() => startGame(songCount, playlistUrl, decade)} className={styles.startGameButton}>
         Start Game
       </button>
     </div>
