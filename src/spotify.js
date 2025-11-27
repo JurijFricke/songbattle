@@ -1,6 +1,6 @@
 const SpotifyWebApi = require('spotify-web-api-node');
-const { SEARCH_QUERIES, MAX_SONG_DURATION_MS, MIN_TRACK_POPULARITY } = require('./config');
-const { readCache, writeCache } = require('./cache');
+const { SEARCH_QUERIES, MAX_SONG_DURATION_MS, MIN_TRACK_POPULARITY, NUM_SEARCH_REQUESTS } = require('./config');
+const { readSongsFromDB, writeSongsToDB } = require('./database');
 
 const spotifyApi = new SpotifyWebApi({
     clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -23,7 +23,7 @@ const refreshClientAccessToken = async () => {
 
 const fetchSongsFromSearch = async (yearFilter) => {
     const shuffledQueries = [...SEARCH_QUERIES].sort(() => 0.5 - Math.random());
-    const randomQueries = shuffledQueries.slice(0, 15);
+    const randomQueries = shuffledQueries.slice(0, NUM_SEARCH_REQUESTS);
     const searchPromises = randomQueries.map(query => {
         let enhancedQuery = query;
         if (yearFilter) {
@@ -46,49 +46,48 @@ const fetchSongsFromSearch = async (yearFilter) => {
     }
 };
 
+const applyFilters = (tracks) => {
+    if (!tracks || tracks.length === 0) return [];
+    const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
+    let filteredTracks = tracks.filter(track =>
+        track && track.name && track.album &&
+        !audiobookRegex.test(track.name) &&
+        !audiobookRegex.test(track.album.name)
+    );
+    filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+    filteredTracks = filteredTracks.filter(track => track.popularity >= MIN_TRACK_POPULARITY);
+    return filteredTracks.filter(
+        (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
+    );
+};
+
 const populateSongsPool = async () => {
-    let cacheLoaded = false;
+    let dbLoaded = false;
     try {
-        const cachedData = await readCache();
-        if (cachedData && cachedData.length > 0) {
-            songsPool = cachedData;
-            cacheLoaded = true;
-            console.log(`Songs loaded from cache: ${songsPool.length} songs.`);
+        const songsFromDB = await readSongsFromDB();
+        if (songsFromDB && songsFromDB.length > 0) {
+            songsPool = songsFromDB;
+            dbLoaded = true;
+            console.log(`Songs loaded from database: ${songsPool.length} songs.`);
         }
-    } catch (cacheError) {
-        console.warn('Could not load songs from cache on startup:', cacheError);
+    } catch (dbError) {
+        console.warn('Could not load songs from database on startup:', dbError);
     }
 
     await refreshClientAccessToken();
 
     try {
         const freshTracks = await fetchSongsFromSearch();
-        
-        const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
-        let filteredTracks = freshTracks.filter(track =>
-            track && track.name && track.album &&
-            !audiobookRegex.test(track.name) &&
-            !audiobookRegex.test(track.album.name)
-        );
-    // Filter by duration
-    filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
-
-    // Filter by popularity
-    filteredTracks = filteredTracks.filter(track => track.popularity >= MIN_TRACK_POPULARITY);
-
-    // Filter by uniqueness
-    filteredTracks = filteredTracks.filter(
-        (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
-    );
+        const filteredTracks = applyFilters(freshTracks);
 
         if (filteredTracks.length > 0) {
-            songsPool = filteredTracks; // Store full track objects in the pool
-            await writeCache(songsPool); // Write full track objects to cache
-            console.log(`Successfully fetched and mapped ${songsPool.length} unique songs into the pool and updated cache.`);
-        } else if (!cacheLoaded) {
-            console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
+            await writeSongsToDB(filteredTracks);
+            songsPool = await readSongsFromDB();
+            console.log(`Database updated. Total songs in DB: ${songsPool.length}`);
+        } else if (!dbLoaded) {
+            console.warn('Failed to fetch new songs, and no songs were loaded from DB. Song pool might be empty.');
         } else {
-            console.log('Failed to fetch new songs. Using previously loaded cache.');
+            console.log('Failed to fetch new songs. Using songs from DB.');
         }
     } catch (fetchError) {
         console.error('Error fetching fresh songs:', fetchError);
@@ -103,7 +102,6 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
         const yearFilter = `${decade.substring(0, 4)}-${parseInt(decade.substring(0, 4)) + 9}`;
         const freshTracks = await fetchSongsFromSearch(yearFilter);
         tracksToSelect = applyFilters(freshTracks);
-
     } else if (playlistUrl) {
         if (!playlistUrl.includes('/playlist/')) {
             tracksToSelect = songsPool;
@@ -113,6 +111,7 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
             if (playlistIdMatch && playlistIdMatch[1]) {
                 const playlistId = playlistIdMatch[1];
                 try {
+                    // This block is now correct
                     if (!clientAccessToken || spotifyApi.getAccessToken() !== clientAccessToken) {
                         await refreshClientAccessToken();
                     }
@@ -120,24 +119,19 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
                     let offset = 0;
                     let hasMore = true;
                     const hardCapFetchLimit = 1000;
-
                     const initialPlaylistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 1, offset: 0 });
                     const totalTracksInPlaylist = initialPlaylistData.body.total;
                     const effectiveFetchLimit = Math.min(totalTracksInPlaylist, hardCapFetchLimit);
-
                     while (hasMore && allPlaylistItems.length < effectiveFetchLimit) {
                         const limit = Math.min(100, effectiveFetchLimit - allPlaylistItems.length);
                         if (limit <= 0) break;
-
                         const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: limit, offset: offset });
                         allPlaylistItems = allPlaylistItems.concat(playlistData.body.items);
                         offset += playlistData.body.items.length;
                         hasMore = playlistData.body.next !== null;
                     }
-
                     let playlistTracks = allPlaylistItems.map(item => item.track).filter(track => track);
                     tracksToSelect = applyFilters(playlistTracks);
-
                 } catch (error) {
                     console.error(`Error fetching songs from playlist ${playlistId}:`, error);
                     tracksToSelect = songsPool;
