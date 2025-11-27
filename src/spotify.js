@@ -176,8 +176,10 @@ const getSongsForBattle = async (count, urlInput, decade) => {
     if (tracksToSelect.length < count) {
         throw new Error(`Not enough unique songs available. Requested ${count}, but only ${tracksToSelect.length} loaded.`);
     }
-
+    
+    console.log('tracksToSelect before shuffle:', tracksToSelect);
     const shuffled = [...tracksToSelect].sort(() => 0.5 - Math.random());
+    console.log('shuffled before slice:', shuffled);
     const selectedFullTracks = shuffled.slice(0, count);
     
     const selectedSongs = selectedFullTracks.map((item) => ({
