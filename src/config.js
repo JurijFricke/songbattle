@@ -13,7 +13,7 @@ const SEARCH_QUERIES = [
     'top hits'
 ];
 
-const CACHE_FILE = 'cached_songs.json';
+const CACHE_FILE = 'cached_songs_v2.json';
 const REFRESH_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
 const MAX_SONG_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 
