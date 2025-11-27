@@ -20,7 +20,7 @@ function App() {
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '10px' }}>
+    <div style={{ textAlign: 'center', padding: '10px', backgroundColor: '#f0f0f0' }}>
       <h1>Song Battle</h1>
       {gameStarted ? (
         <SongBattle songCount={songCount} playlistUrl={selectedPlaylistUrl} decade={decade} resetGame={resetGame} />
