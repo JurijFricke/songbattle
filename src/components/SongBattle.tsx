@@ -1,3 +1,6 @@
+import React, { useState, useEffect } from 'react';
+import { Song } from '../types/Song';
+import ProgressBar from './ProgressBar'; // Import ProgressBar component
 import { fetchSongsAPI } from '../services/api';
 
 // ... (interface Props)
