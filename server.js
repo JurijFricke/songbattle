@@ -17,6 +17,11 @@ app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 
 //===============
+// API ROUTES
+//===============
+app.use('/api', apiRoutes);
+
+//===============
 // SERVER STARTUP
 //===============
 const startServer = async () => {
