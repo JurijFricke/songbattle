@@ -53,14 +53,14 @@ const StartMenu = ({ startGame, initialPlaylistUrl }: Props) => {
       </div>
 
       <div style={{ marginTop: '20px' }}>
-        <label htmlFor="playlist-url">Or paste a Spotify URL (Playlist or Track):</label>
+        <label htmlFor="playlist-url">Or paste a Spotify Playlist URL (optional):</label>
         <input
           key="playlist-url-input"
           id="playlist-url"
           type="text"
           value={playlistUrl}
           onChange={(e) => setPlaylistUrl(e.target.value)}
-          placeholder="e.g., .../playlist/..."
+          placeholder="e.g., https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
           className="custom-input"
         />
       </div>
