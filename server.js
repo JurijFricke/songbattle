@@ -23,8 +23,8 @@ app.use(cors({
             return callback(null, true);
         }
 
-        // For non-production environments, allow any Netlify preview URL
-        if (process.env.NODE_ENV !== 'production' && new RegExp("https://.*--songbattle-frontend.netlify.app").test(origin)) {
+        // Always allow any Netlify preview URL (for single service deployment strategy)
+        if (new RegExp("https://.*--songbattle-frontend.netlify.app").test(origin)) {
             return callback(null, true);
         }
 
