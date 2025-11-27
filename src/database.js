@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 // A simpler schema that just stores the raw track object from Spotify.
 const songSchema = new mongoose.Schema({
-    _id: String, // Using the Spotify track ID as the document ID
-    track: Object, // Store the entire track object
+    _id: { type: String, index: true },
+    track: Object,
 }, { _id: false });
 
 const Song = mongoose.model('Song', songSchema);
