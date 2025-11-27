@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Song } from '../types/Song';
 import ProgressBar from './ProgressBar';
 import { fetchSongsAPI } from '../services/api';
