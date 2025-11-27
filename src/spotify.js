@@ -24,7 +24,6 @@ const refreshClientAccessToken = async () => {
 const fetchSongsFromSearch = async (yearFilter) => {
     const shuffledQueries = [...SEARCH_QUERIES].sort(() => 0.5 - Math.random());
     const randomQueries = shuffledQueries.slice(0, 15);
-
     const searchPromises = randomQueries.map(query => {
         let enhancedQuery = query;
         if (yearFilter) {
@@ -36,37 +35,15 @@ const fetchSongsFromSearch = async (yearFilter) => {
                 return null;
             });
     });
-
     try {
         const searchResults = await Promise.all(searchPromises);
-        const allTracks = searchResults
+        return searchResults
             .filter(result => result !== null)
             .flatMap(result => result.body.tracks.items);
-        return allTracks;
     } catch (error) {
         console.error('An unexpected error occurred during parallel song fetching:', error);
         return [];
     }
-};
-
-const applyFilters = (tracks) => {
-    if (!tracks || tracks.length === 0) {
-        return [];
-    }
-    const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
-    let filteredTracks = tracks.filter(track =>
-        track && track.name && track.album &&
-        !audiobookRegex.test(track.name) &&
-        !audiobookRegex.test(track.album.name)
-    );
-
-    filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
-
-    filteredTracks = filteredTracks.filter(
-        (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
-    );
-    
-    return filteredTracks;
 };
 
 const populateSongsPool = async () => {
@@ -86,17 +63,21 @@ const populateSongsPool = async () => {
 
     try {
         const freshTracks = await fetchSongsFromSearch();
-        const filteredTracks = applyFilters(freshTracks);
+        
+        const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
+        let filteredTracks = freshTracks.filter(track =>
+            track && track.name && track.album &&
+            !audiobookRegex.test(track.name) &&
+            !audiobookRegex.test(track.album.name)
+        );
+        filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+        filteredTracks = filteredTracks.filter(
+            (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
+        );
 
         if (filteredTracks.length > 0) {
-            const newSongsPool = filteredTracks.map((item) => ({
-                id: item.id,
-                title: item.name,
-                artist: item.artists.map((artist) => artist.name).join(', '),
-                embed: `<iframe src="https://open.spotify.com/embed/track/${item.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
-            }));
-            songsPool = newSongsPool;
-            await writeCache(songsPool);
+            songsPool = filteredTracks; // Store full track objects in the pool
+            await writeCache(songsPool); // Write full track objects to cache
             console.log(`Successfully fetched and mapped ${songsPool.length} unique songs into the pool and updated cache.`);
         } else if (!cacheLoaded) {
             console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
@@ -105,9 +86,6 @@ const populateSongsPool = async () => {
         }
     } catch (fetchError) {
         console.error('Error fetching fresh songs:', fetchError);
-        if (!cacheLoaded) {
-            console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
-        }
     }
 };
 
@@ -118,7 +96,17 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
     if (decade) {
         const yearFilter = `${decade.substring(0, 4)}-${parseInt(decade.substring(0, 4)) + 9}`;
         const freshTracks = await fetchSongsFromSearch(yearFilter);
-        tracksToSelect = applyFilters(freshTracks);
+
+        const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
+        let filteredTracks = freshTracks.filter(track =>
+            track && track.name && track.album &&
+            !audiobookRegex.test(track.name) &&
+            !audiobookRegex.test(track.album.name)
+        );
+        filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+        tracksToSelect = filteredTracks.filter(
+            (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
+        );
 
     } else if (playlistUrl) {
         if (!playlistUrl.includes('/playlist/')) {
@@ -136,23 +124,29 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
                     let offset = 0;
                     let hasMore = true;
                     const hardCapFetchLimit = 1000;
-
                     const initialPlaylistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 1, offset: 0 });
                     const totalTracksInPlaylist = initialPlaylistData.body.total;
                     const effectiveFetchLimit = Math.min(totalTracksInPlaylist, hardCapFetchLimit);
-
                     while (hasMore && allPlaylistItems.length < effectiveFetchLimit) {
                         const limit = Math.min(100, effectiveFetchLimit - allPlaylistItems.length);
                         if (limit <= 0) break;
-
                         const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: limit, offset: offset });
                         allPlaylistItems = allPlaylistItems.concat(playlistData.body.items);
                         offset += playlistData.body.items.length;
                         hasMore = playlistData.body.next !== null;
                     }
-
                     let playlistTracks = allPlaylistItems.map(item => item.track).filter(track => track);
-                    tracksToSelect = applyFilters(playlistTracks);
+                    
+                    const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
+                    let filteredTracks = playlistTracks.filter(track =>
+                        track && track.name && track.album &&
+                        !audiobookRegex.test(track.name) &&
+                        !audiobookRegex.test(track.album.name)
+                    );
+                    filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+                    tracksToSelect = filteredTracks.filter(
+                        (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
+                    );
 
                 } catch (error) {
                     console.error(`Error fetching songs from playlist ${playlistId}:`, error);
@@ -168,7 +162,7 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
         tracksToSelect = songsPool;
     }
 
-    if (tracksToSelect.length === 0) {
+    if (!tracksToSelect || tracksToSelect.length === 0) {
         throw new Error('Song pool is empty.');
     }
     if (tracksToSelect.length < count) {
