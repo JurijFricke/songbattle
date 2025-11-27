@@ -112,7 +112,6 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
         const yearFilter = `${decade.substring(0, 4)}-${parseInt(decade.substring(0, 4)) + 9}`;
         
         let freshTracks = await fetchSongsFromSearch(yearFilter);
-        console.log(`Initial fetch for decade found ${freshTracks.length} tracks.`);
 
         if (freshTracks && freshTracks.length > 0) {
             // Filter out spoken word tracks using audio features
@@ -133,7 +132,6 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
                 }
                 
                 freshTracks = freshTracks.filter(track => musicTrackIds.has(track.id));
-                console.log(`After speechiness filter: ${freshTracks.length} tracks remaining.`);
             } catch (audioFeaturesError) {
                 console.error('Error fetching audio features, skipping speechiness filter:', audioFeaturesError);
             }
@@ -144,12 +142,9 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
 
             // Filter by uniqueness and duration
             let uniqueTracks = freshTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
-            console.log(`After duration filter: ${uniqueTracks.length} tracks remaining.`);
-            
             uniqueTracks = uniqueTracks.filter(
                 (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
             );
-            console.log(`After uniqueness filter: ${uniqueTracks.length} tracks remaining.`);
 
             tracksToSelect = uniqueTracks.map((item) => ({
                 id: item.id,
