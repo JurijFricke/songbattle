@@ -53,51 +53,149 @@ const fetchSongsFromSearch = async () => {
 };
 
 const populateSongsPool = async () => {
+
     let cacheLoaded = false;
+
     try {
+
         const cachedData = await readCache();
+
         if (cachedData && cachedData.length > 0) {
+
             songsPool = cachedData;
+
             cacheLoaded = true;
+
             console.log(`Songs loaded from cache: ${songsPool.length} songs.`);
+
         }
+
     } catch (cacheError) {
+
         console.warn('Could not load songs from cache on startup:', cacheError.message);
+
     }
+
+
 
     await refreshClientAccessToken();
 
+
+
     try {
-        const freshTracks = await fetchSongsFromSearch();
+
+        let freshTracks = await fetchSongsFromSearch();
+
+
+
         if (freshTracks && freshTracks.length > 0) {
+
+            // Filter out spoken word tracks using audio features
+
+            try {
+
+                const allTrackIds = freshTracks.map(track => track.id);
+
+                const musicTrackIds = new Set();
+
+                
+
+                // Batch track IDs into chunks of 100
+
+                for (let i = 0; i < allTrackIds.length; i += 100) {
+
+                    const batchIds = allTrackIds.slice(i, i + 100);
+
+                    const audioFeatures = await spotifyApi.getAudioFeaturesForTracks(batchIds);
+
+                    const speechinessThreshold = 0.5;
+
+
+
+                    audioFeatures.body.audio_features.forEach(feature => {
+
+                        if (feature && feature.speechiness < speechinessThreshold) {
+
+                            musicTrackIds.add(feature.id);
+
+                        }
+
+                    });
+
+                }
+
+                
+
+                freshTracks = freshTracks.filter(track => musicTrackIds.has(track.id));
+
+                console.log(`Filtered out spoken word tracks, ${freshTracks.length} tracks remaining.`);
+
+
+
+            } catch (audioFeaturesError) {
+
+                console.error('Error fetching audio features, skipping speechiness filter:', audioFeaturesError);
+
+            }
+
+
+
             let uniqueTracks = freshTracks.filter(
+
                 (item, index, self) =>
+
                 item && item.id && self.findIndex((t) => t && t.id === item.id) === index
+
             );
 
+
+
             // Filter out tracks that are too long (likely audiobooks/podcasts)
+
             uniqueTracks = uniqueTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
 
+
+
             const newSongsPool = uniqueTracks.map((item) => ({
+
                 id: item.id,
+
                 title: item.name,
+
                 artist: item.artists.map((artist) => artist.name).join(', '),
+
                 embed: `<iframe src="https://open.spotify.com/embed/track/${item.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
+
             }));
+
             songsPool = newSongsPool;
+
             await writeCache(songsPool);
+
             console.log(`Successfully fetched and mapped ${songsPool.length} unique songs into the pool and updated cache.`);
+
         } else if (!cacheLoaded) {
+
             console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
+
         } else {
+
             console.log('Failed to fetch new songs. Using previously loaded cache.');
+
         }
+
     } catch (fetchError) {
+
         console.error('Error fetching fresh songs:', fetchError);
+
         if (!cacheLoaded) {
+
             console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
+
         }
+
     }
+
 };
 
 const getSongsForBattle = async (count, playlistUrl) => {
@@ -130,16 +228,41 @@ const getSongsForBattle = async (count, playlistUrl) => {
                     hasMore = playlistData.body.next !== null;
                 }
 
-                const playlistTracks = allPlaylistItems
-                    .filter(item => item && item.track && item.track.duration_ms < MAX_SONG_DURATION_MS) // Filter out nulls and long tracks
-                    .map(item => ({
-                        id: item.track.id,
-                        title: item.track.name,
-                        artist: item.track.artists.map(artist => artist.name).join(', '),
-                        embed: `<iframe src="https://open.spotify.com/embed/track/${item.track.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
-                    }));
+                let playlistTracks = allPlaylistItems.map(item => item.track).filter(track => track);
 
-                tracksToSelect = playlistTracks.filter(
+                // Filter out tracks that are too long
+                playlistTracks = playlistTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+                
+                // Filter out spoken word tracks using audio features
+                try {
+                    const allTrackIds = playlistTracks.map(track => track.id);
+                    const musicTrackIds = new Set();
+                    
+                    for (let i = 0; i < allTrackIds.length; i += 100) {
+                        const batchIds = allTrackIds.slice(i, i + 100);
+                        const audioFeatures = await spotifyApi.getAudioFeaturesForTracks(batchIds);
+                        const speechinessThreshold = 0.5;
+
+                        audioFeatures.body.audio_features.forEach(feature => {
+                            if (feature && feature.speechiness < speechinessThreshold) {
+                                musicTrackIds.add(feature.id);
+                            }
+                        });
+                    }
+                    
+                    playlistTracks = playlistTracks.filter(track => musicTrackIds.has(track.id));
+                } catch (audioFeaturesError) {
+                    console.error('Error fetching audio features for playlist, skipping speechiness filter:', audioFeaturesError);
+                }
+
+                const uniquePlaylistTracks = playlistTracks.map(track => ({
+                    id: track.id,
+                    title: track.name,
+                    artist: track.artists.map(artist => artist.name).join(', '),
+                    embed: `<iframe src="https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
+                }));
+
+                tracksToSelect = uniquePlaylistTracks.filter(
                     (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
                 );
                 console.log(`Fetched ${tracksToSelect.length} songs from provided playlist.`);
