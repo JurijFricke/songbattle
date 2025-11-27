@@ -1,27 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Song } from '../types/Song';
-import ProgressBar from './ProgressBar';
+import { fetchSongsAPI } from '../services/api';
 
-interface Props {
-  songCount: number;
-  playlistUrl?: string;
-  decade?: string;
-  resetGame: () => void;
-}
+// ... (interface Props)
 
 const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
-  const [round, setRound] = useState(1);
-  const [contenders, setContenders] = useState<Song[]>([]);
-  const [nextContenders, setNextContenders] = useState<Song[]>([]);
-  const [winner, setWinner] = useState<Song | null>(null);
-  const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isPlaylistLoading, setIsPlaylistLoading] = useState(false);
-  const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null);
-  const [isBattleLoading, setIsBattleLoading] = useState(false);
+  // ... (state declarations)
 
   useEffect(() => {
-    const fetchSongs = async () => {
+    const loadSongs = async () => {
       setErrorMessage(null);
       setContenders([]);
       if (playlistUrl || decade) {
@@ -29,25 +14,11 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
       }
 
       try {
-        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://songbattle-backend.onrender.com';
-        let url = `${backendUrl}/api/songs?count=${songCount}`;
-        if (playlistUrl) {
-          url += `&playlistUrl=${encodeURIComponent(playlistUrl)}`;
-        } else if (decade) {
-          url += `&decade=${decade}`;
+        const { songs, warning } = await fetchSongsAPI(songCount, playlistUrl, decade);
+        if (warning) {
+          alert(warning);
         }
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (data.warning) {
-          alert(data.warning); // Display warning as a browser pop-up
-        }
-        setContenders(data.songs);
+        setContenders(songs);
       } catch (error: any) {
         console.error('Error fetching songs:', error);
         setErrorMessage(error.message || 'Failed to load songs. Please try again later.');
@@ -57,8 +28,10 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
         }
       }
     };
-    fetchSongs();
+    loadSongs();
   }, [songCount, playlistUrl, decade]);
+
+  // ... (rest of the component)
 
   const handleVote = (selectedSong: Song) => {
     setLastClickedButtonId(selectedSong.id);
