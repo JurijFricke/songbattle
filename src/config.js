@@ -16,10 +16,12 @@ const SEARCH_QUERIES = [
 const CACHE_FILE = 'cached_songs_v2.json';
 const REFRESH_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
 const MAX_SONG_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+const MIN_TRACK_POPULARITY = 2; // Minimum popularity score for a track to be included
 
 module.exports = {
     SEARCH_QUERIES,
     CACHE_FILE,
     REFRESH_INTERVAL,
     MAX_SONG_DURATION_MS,
+    MIN_TRACK_POPULARITY,
 };

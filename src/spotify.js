@@ -70,10 +70,16 @@ const populateSongsPool = async () => {
             !audiobookRegex.test(track.name) &&
             !audiobookRegex.test(track.album.name)
         );
-        filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
-        filteredTracks = filteredTracks.filter(
-            (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
-        );
+    // Filter by duration
+    filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+
+    // Filter by popularity
+    filteredTracks = filteredTracks.filter(track => track.popularity >= MIN_TRACK_POPULARITY);
+
+    // Filter by uniqueness
+    filteredTracks = filteredTracks.filter(
+        (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
+    );
 
         if (filteredTracks.length > 0) {
             songsPool = filteredTracks; // Store full track objects in the pool
