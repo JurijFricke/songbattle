@@ -1,54 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Song } from '../types/Song';
 import ProgressBar from './ProgressBar';
-import { fetchSongsAPI } from '../services/api';
-import styles from './SongBattle.module.css';
-import { useGame } from '../context/GameContext'; // Import the custom hook
+import { fetchSongsAPI, saveBattleResultAPI } from '../services/api';
+
+// ... (imports and interface)
 
 const SongBattle = () => {
-  const { songCount, playlistUrl, decade, resetGame } = useGame(); // Get state from context
-  const [round, setRound] = useState(1);
-  const [contenders, setContenders] = useState<Song[]>([]);
-  const [nextContenders, setNextContenders] = useState<Song[]>([]);
-  const [winner, setWinner] = useState<Song | null>(null);
-  const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isPlaylistLoading, setIsPlaylistLoading] = useState(false);
-  const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null);
-  const [isBattleLoading, setIsBattleLoading] = useState(false);
+  const { songCount, playlistUrl, decade, resetGame } = useGame();
+  // ... (state)
 
-  useEffect(() => {
-    const loadSongs = async () => {
-      setErrorMessage(null);
-      setContenders([]);
-      if (playlistUrl || decade) {
-        setIsPlaylistLoading(true);
-      }
-
-      try {
-        const { songs, warning } = await fetchSongsAPI(songCount, playlistUrl, decade);
-        if (warning) {
-          alert(warning);
-        }
-        setContenders(songs);
-      } catch (error: any) {
-        console.error('Error fetching songs:', error);
-        setErrorMessage(error.message || 'Failed to load songs. Please try again later.');
-      } finally {
-        if (playlistUrl || decade) {
-          setIsPlaylistLoading(false);
-        }
-      }
-    };
-    loadSongs();
-  }, [songCount, playlistUrl, decade]);
+  // ... (useEffect)
 
   const handleVote = (selectedSong: Song) => {
+    // Identify winner and loser for the current matchup
+    const song1 = contenders[currentBattleIndex];
+    const song2 = contenders[currentBattleIndex + 1];
+    const loserSong = selectedSong.id === song1.id ? song2 : song1;
+
+    // Fire-and-forget the result to the backend
+    saveBattleResultAPI(selectedSong.id, loserSong.id);
+
     setLastClickedButtonId(selectedSong.id);
     setIsBattleLoading(true);
 
     setTimeout(() => {
-      setLastClickedButtonId(null);
+      // ... (rest of handleVote)
 
       const newNextContenders = [...nextContenders, selectedSong];
       const nextBattleIndexCandidate = currentBattleIndex + 2;

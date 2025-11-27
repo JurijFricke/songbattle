@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './StartMenu.module.css';
 import { useGame } from '../context/GameContext'; // Import the custom hook
+import HallOfFame from './HallOfFame'; // Import the new component
 
 const StartMenu = () => {
   const { startGame, playlistUrl: initialPlaylistUrl } = useGame(); // Get what's needed from context
@@ -66,6 +67,7 @@ const StartMenu = () => {
       <button onClick={() => startGame(songCount, playlistUrl, decade)} className={styles.startGameButton}>
         Start Game
       </button>
+      <HallOfFame />
     </div>
   );
 };
