@@ -69,7 +69,4 @@ const StartMenu = () => {
     </div>
   );
 };
-
-export default StartMenu;
-
 export default StartMenu;
