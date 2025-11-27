@@ -1,6 +1,14 @@
+import React, { useState, useEffect } from 'react';
+import { Song } from '../types/Song';
+import ProgressBar from './ProgressBar'; // Import ProgressBar component
 import { fetchSongsAPI } from '../services/api';
 
-// ... (interface Props)
+interface Props {
+  songCount: number;
+  playlistUrl?: string;
+  decade?: string;
+  resetGame: () => void;
+}
 
 const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
   // ... (state declarations)
