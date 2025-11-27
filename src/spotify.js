@@ -29,7 +29,7 @@ const fetchSongsFromSearch = async (yearFilter) => {
 
     // 2. Map queries to an array of promises
     const searchPromises = randomQueries.map(query => {
-        let enhancedQuery = `${query} NOT audiobook NOT "hörbuch"`;
+        let enhancedQuery = query;
         if (yearFilter) {
             enhancedQuery = `${enhancedQuery} year:${yearFilter}`;
         }
@@ -135,8 +135,12 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
                 freshTracks = freshTracks.filter(track => musicTrackIds.has(track.id));
                 console.log(`After speechiness filter: ${freshTracks.length} tracks remaining.`);
             } catch (audioFeaturesError) {
-                console.error('Error fetching audio features for decade battle, skipping speechiness filter:', audioFeaturesError);
+                console.error('Error fetching audio features, skipping speechiness filter:', audioFeaturesError);
             }
+
+            // Filter out audiobooks by title
+            freshTracks = freshTracks.filter(track => !/hörbuch|audiobook/i.test(track.name));
+            console.log(`After audiobook title filter: ${freshTracks.length} tracks remaining.`);
 
             // Filter by uniqueness and duration
             let uniqueTracks = freshTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
