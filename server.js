@@ -30,6 +30,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Handle preflight OPTIONS requests for all routes
+app.options('*', cors());
+
 //===============
 // API ROUTES
 //===============
