@@ -53,7 +53,6 @@ const applyFilters = (tracks) => {
     if (!tracks || tracks.length === 0) {
         return [];
     }
-    // Filter out audiobooks by title and album name
     const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
     let filteredTracks = tracks.filter(track =>
         track && track.name && track.album &&
@@ -61,10 +60,8 @@ const applyFilters = (tracks) => {
         !audiobookRegex.test(track.album.name)
     );
 
-    // Filter by duration
     filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
 
-    // Filter by uniqueness
     filteredTracks = filteredTracks.filter(
         (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
     );
