@@ -124,43 +124,48 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
         tracksToSelect = applyFilters(freshTracks);
 
     } else if (playlistUrl) {
-        const playlistIdMatch = playlistUrl.match(/playlist\/([a-zA-Z0-9]+)/);
-        if (playlistIdMatch && playlistIdMatch[1]) {
-            const playlistId = playlistIdMatch[1];
-            try {
-                if (!clientAccessToken || spotifyApi.getAccessToken() !== clientAccessToken) {
-                    await refreshClientAccessToken();
-                }
-                let allPlaylistItems = [];
-                let offset = 0;
-                let hasMore = true;
-                const hardCapFetchLimit = 1000;
-
-                const initialPlaylistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 1, offset: 0 });
-                const totalTracksInPlaylist = initialPlaylistData.body.total;
-                const effectiveFetchLimit = Math.min(totalTracksInPlaylist, hardCapFetchLimit);
-
-                while (hasMore && allPlaylistItems.length < effectiveFetchLimit) {
-                    const limit = Math.min(100, effectiveFetchLimit - allPlaylistItems.length);
-                    if (limit <= 0) break;
-
-                    const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: limit, offset: offset });
-                    allPlaylistItems = allPlaylistItems.concat(playlistData.body.items);
-                    offset += playlistData.body.items.length;
-                    hasMore = playlistData.body.next !== null;
-                }
-
-                let playlistTracks = allPlaylistItems.map(item => item.track).filter(track => track);
-                tracksToSelect = applyFilters(playlistTracks);
-
-            } catch (error) {
-                console.error(`Error fetching songs from playlist ${playlistId}:`, error);
-                tracksToSelect = songsPool;
-                warning = `Could not load the provided playlist. Using the general song pool instead.`;
-            }
-        } else {
+        if (!playlistUrl.includes('/playlist/')) {
             tracksToSelect = songsPool;
-            warning = 'The provided playlist URL was invalid. Using the general song pool instead.';
+            warning = 'The provided URL is not a Spotify playlist URL. Using the general song pool instead.';
+        } else {
+            const playlistIdMatch = playlistUrl.match(/playlist\/([a-zA-Z0-9]+)/);
+            if (playlistIdMatch && playlistIdMatch[1]) {
+                const playlistId = playlistIdMatch[1];
+                try {
+                    if (!clientAccessToken || spotifyApi.getAccessToken() !== clientAccessToken) {
+                        await refreshClientAccessToken();
+                    }
+                    let allPlaylistItems = [];
+                    let offset = 0;
+                    let hasMore = true;
+                    const hardCapFetchLimit = 1000;
+
+                    const initialPlaylistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 1, offset: 0 });
+                    const totalTracksInPlaylist = initialPlaylistData.body.total;
+                    const effectiveFetchLimit = Math.min(totalTracksInPlaylist, hardCapFetchLimit);
+
+                    while (hasMore && allPlaylistItems.length < effectiveFetchLimit) {
+                        const limit = Math.min(100, effectiveFetchLimit - allPlaylistItems.length);
+                        if (limit <= 0) break;
+
+                        const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: limit, offset: offset });
+                        allPlaylistItems = allPlaylistItems.concat(playlistData.body.items);
+                        offset += playlistData.body.items.length;
+                        hasMore = playlistData.body.next !== null;
+                    }
+
+                    let playlistTracks = allPlaylistItems.map(item => item.track).filter(track => track);
+                    tracksToSelect = applyFilters(playlistTracks);
+
+                } catch (error) {
+                    console.error(`Error fetching songs from playlist ${playlistId}:`, error);
+                    tracksToSelect = songsPool;
+                    warning = `Could not load the provided playlist. Using the general song pool instead.`;
+                }
+            } else {
+                tracksToSelect = songsPool;
+                warning = 'The provided playlist URL was invalid. Using the general song pool instead.';
+            }
         }
     } else {
         tracksToSelect = songsPool;
