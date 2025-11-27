@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Song } from '../types/Song';
 import ProgressBar from './ProgressBar';
 import { fetchSongsAPI, saveBattleResultAPI } from '../services/api';
-
-// ... (imports and interface)
+import styles from './SongBattle.module.css';
+import { useGame } from '../context/GameContext';
 
 const SongBattle = () => {
   const { songCount, playlistUrl, decade, resetGame } = useGame();
