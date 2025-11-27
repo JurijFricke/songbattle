@@ -5,10 +5,11 @@ const router = express.Router();
 router.get('/songs', async (req, res) => {
     const count = parseInt(req.query.count) || 16;
     const playlistUrl = req.query.playlistUrl;
-    console.log('Received /api/songs request. Count:', count, 'Playlist URL:', playlistUrl);
+    const decade = req.query.decade; // Read the decade from query params
+    console.log('Received /api/songs request. Count:', count, 'Playlist URL:', playlistUrl, 'Decade:', decade);
 
     try {
-        const selectedSongs = await getSongsForBattle(count, playlistUrl);
+        const selectedSongs = await getSongsForBattle(count, playlistUrl, decade);
         res.json(selectedSongs);
     } catch (error) {
         console.error('Error in /api/songs route:', error.message);

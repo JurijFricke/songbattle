@@ -21,7 +21,7 @@ const refreshClientAccessToken = async () => {
     }
 };
 
-const fetchSongsFromSearch = async () => {
+const fetchSongsFromSearch = async (yearFilter) => {
     // 1. Create an array of 15 random queries
     const randomQueries = Array.from({ length: 15 }, () =>
         SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)]
@@ -29,7 +29,10 @@ const fetchSongsFromSearch = async () => {
 
     // 2. Map queries to an array of promises
     const searchPromises = randomQueries.map(query => {
-        const enhancedQuery = `${query} NOT audiobook NOT "hörbuch"`;
+        let enhancedQuery = `${query} NOT audiobook NOT "hörbuch"`;
+        if (yearFilter) {
+            enhancedQuery = `${enhancedQuery} year:${yearFilter}`;
+        }
         return spotifyApi.searchTracks(enhancedQuery, { limit: 50 })
             .catch(err => {
                 console.warn(`Could not fetch tracks for query "${enhancedQuery}":`, err.message);
@@ -101,10 +104,53 @@ const populateSongsPool = async () => {
     }
 };
 
-const getSongsForBattle = async (count, playlistUrl) => {
+const getSongsForBattle = async (count, playlistUrl, decade) => {
     let tracksToSelect = [];
 
-    if (playlistUrl) {
+    if (decade) {
+        console.log(`Fetching songs for decade: ${decade}`);
+        const yearFilter = `${decade.substring(0, 4)}-${parseInt(decade.substring(0, 4)) + 9}`;
+        
+        let freshTracks = await fetchSongsFromSearch(yearFilter);
+
+        if (freshTracks && freshTracks.length > 0) {
+            // Filter out spoken word tracks using audio features
+            try {
+                const allTrackIds = freshTracks.map(track => track.id);
+                const musicTrackIds = new Set();
+                
+                for (let i = 0; i < allTrackIds.length; i += 100) {
+                    const batchIds = allTrackIds.slice(i, i + 100);
+                    const audioFeatures = await spotifyApi.getAudioFeaturesForTracks(batchIds);
+                    const speechinessThreshold = 0.5;
+
+                    audioFeatures.body.audio_features.forEach(feature => {
+                        if (feature && feature.speechiness < speechinessThreshold) {
+                            musicTrackIds.add(feature.id);
+                        }
+                    });
+                }
+                
+                freshTracks = freshTracks.filter(track => musicTrackIds.has(track.id));
+            } catch (audioFeaturesError) {
+                console.error('Error fetching audio features for decade battle, skipping speechiness filter:', audioFeaturesError);
+            }
+
+            // Filter by uniqueness and duration
+            let uniqueTracks = freshTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+            uniqueTracks = uniqueTracks.filter(
+                (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
+            );
+
+            tracksToSelect = uniqueTracks.map((item) => ({
+                id: item.id,
+                title: item.name,
+                artist: item.artists.map((artist) => artist.name).join(', '),
+                embed: `<iframe src="https://open.spotify.com/embed/track/${item.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
+            }));
+        }
+
+    } else if (playlistUrl) {
         const playlistIdMatch = playlistUrl.match(/playlist\/([a-zA-Z0-9]+)/);
         if (playlistIdMatch && playlistIdMatch[1]) {
             const playlistId = playlistIdMatch[1];
@@ -131,16 +177,41 @@ const getSongsForBattle = async (count, playlistUrl) => {
                     hasMore = playlistData.body.next !== null;
                 }
 
-                const playlistTracks = allPlaylistItems
-                    .filter(item => item && item.track && item.track.duration_ms < MAX_SONG_DURATION_MS) // Filter out nulls and long tracks
-                    .map(item => ({
-                        id: item.track.id,
-                        title: item.track.name,
-                        artist: item.track.artists.map(artist => artist.name).join(', '),
-                        embed: `<iframe src="https://open.spotify.com/embed/track/${item.track.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
-                    }));
+                let playlistTracks = allPlaylistItems.map(item => item.track).filter(track => track); // Get track objects and filter nulls
 
-                tracksToSelect = playlistTracks.filter(
+                // Filter out tracks that are too long
+                playlistTracks = playlistTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+                
+                // Filter out spoken word tracks using audio features
+                try {
+                    const allTrackIds = playlistTracks.map(track => track.id);
+                    const musicTrackIds = new Set();
+                    
+                    for (let i = 0; i < allTrackIds.length; i += 100) {
+                        const batchIds = allTrackIds.slice(i, i + 100);
+                        const audioFeatures = await spotifyApi.getAudioFeaturesForTracks(batchIds);
+                        const speechinessThreshold = 0.5;
+
+                        audioFeatures.body.audio_features.forEach(feature => {
+                            if (feature && feature.speechiness < speechinessThreshold) {
+                                musicTrackIds.add(feature.id);
+                            }
+                        });
+                    }
+                    
+                    playlistTracks = playlistTracks.filter(track => musicTrackIds.has(track.id));
+                } catch (audioFeaturesError) {
+                    console.error('Error fetching audio features for playlist, skipping speechiness filter:', audioFeaturesError);
+                }
+
+                const uniquePlaylistTracks = playlistTracks.map(track => ({
+                    id: track.id,
+                    title: track.name,
+                    artist: track.artists.map(artist => artist.name).join(', '),
+                    embed: `<iframe src="https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
+                }));
+
+                tracksToSelect = uniquePlaylistTracks.filter(
                     (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
                 );
                 console.log(`Fetched ${tracksToSelect.length} songs from provided playlist.`);
@@ -154,6 +225,7 @@ const getSongsForBattle = async (count, playlistUrl) => {
             tracksToSelect = songsPool;
         }
     } else {
+        // Fallback to the general pool if no decade or playlist is provided
         tracksToSelect = songsPool;
     }
 
