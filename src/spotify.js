@@ -28,13 +28,14 @@ const fetchSongsFromSearch = async () => {
     );
 
     // 2. Map queries to an array of promises
-    const searchPromises = randomQueries.map(query =>
-        spotifyApi.searchTracks(query, { limit: 50 })
+    const searchPromises = randomQueries.map(query => {
+        const enhancedQuery = `${query} NOT audiobook NOT "hörbuch"`;
+        return spotifyApi.searchTracks(enhancedQuery, { limit: 50 })
             .catch(err => {
-                console.warn(`Could not fetch tracks for query "${query}":`, err.message);
+                console.warn(`Could not fetch tracks for query "${enhancedQuery}":`, err.message);
                 return null; // Return null on error to not break Promise.all
-            })
-    );
+            });
+    });
 
     try {
         // 3. Execute all promises in parallel
