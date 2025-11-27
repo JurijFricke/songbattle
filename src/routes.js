@@ -9,8 +9,12 @@ router.get('/songs', async (req, res) => {
     console.log('Received /api/songs request. Count:', count, 'Playlist URL:', playlistUrl, 'Decade:', decade);
 
     try {
-        const selectedSongs = await getSongsForBattle(count, playlistUrl, decade);
-        res.json(selectedSongs);
+        const { songs, warning } = await getSongsForBattle(count, playlistUrl, decade);
+        if (warning) {
+            res.json({ songs, warning });
+        } else {
+            res.json({ songs });
+        }
     } catch (error) {
         console.error('Error in /api/songs route:', error.message);
         // Determine status code based on error message

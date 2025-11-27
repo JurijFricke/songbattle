@@ -106,12 +106,14 @@ const populateSongsPool = async () => {
 
 const getSongsForBattle = async (count, playlistUrl, decade) => {
     let tracksToSelect = [];
+    let warning = null; // Add a warning field
 
     if (decade) {
         console.log(`Fetching songs for decade: ${decade}`);
         const yearFilter = `${decade.substring(0, 4)}-${parseInt(decade.substring(0, 4)) + 9}`;
         
         let freshTracks = await fetchSongsFromSearch(yearFilter);
+        console.log(`Initial fetch for decade found ${freshTracks.length} tracks.`);
 
         if (freshTracks && freshTracks.length > 0) {
             // Filter out spoken word tracks using audio features
@@ -119,6 +121,7 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
                 const allTrackIds = freshTracks.map(track => track.id);
                 const musicTrackIds = new Set();
                 
+                // Batch track IDs into chunks of 100
                 for (let i = 0; i < allTrackIds.length; i += 100) {
                     const batchIds = allTrackIds.slice(i, i + 100);
                     const audioFeatures = await spotifyApi.getAudioFeaturesForTracks(batchIds);
@@ -132,8 +135,9 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
                 }
                 
                 freshTracks = freshTracks.filter(track => musicTrackIds.has(track.id));
+                console.log(`After speechiness filter: ${freshTracks.length} tracks remaining.`);
             } catch (audioFeaturesError) {
-                console.error('Error fetching audio features, skipping speechiness filter:', audioFeaturesError);
+                console.error('Error fetching audio features for decade battle, skipping speechiness filter:', audioFeaturesError);
             }
 
             // Filter out audiobooks by title
@@ -142,9 +146,12 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
 
             // Filter by uniqueness and duration
             let uniqueTracks = freshTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+            console.log(`After duration filter: ${uniqueTracks.length} tracks remaining.`);
+            
             uniqueTracks = uniqueTracks.filter(
                 (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
             );
+            console.log(`After uniqueness filter: ${uniqueTracks.length} tracks remaining.`);
 
             tracksToSelect = uniqueTracks.map((item) => ({
                 id: item.id,
@@ -222,11 +229,13 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
             } catch (error) {
                 console.error(`Error fetching songs from playlist ${playlistId}:`, error);
                 tracksToSelect = songsPool;
+                warning = `Could not load the provided playlist. Using the general song pool instead.`;
                 console.log('Falling back to general song pool due to playlist fetch error.');
             }
         } else {
             console.warn('Invalid playlist URL provided. Falling back to general song pool.');
             tracksToSelect = songsPool;
+            warning = 'The provided playlist URL was invalid. Using the general song pool instead.';
         }
     } else {
         // Fallback to the general pool if no decade or playlist is provided
@@ -241,7 +250,9 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
     }
 
     const shuffled = [...tracksToSelect].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
+    const selectedSongs = shuffled.slice(0, count);
+
+    return { songs: selectedSongs, warning };
 };
 
 
