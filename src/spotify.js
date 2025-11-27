@@ -1,5 +1,5 @@
 const SpotifyWebApi = require('spotify-web-api-node');
-const { SEARCH_QUERIES } = require('./config');
+const { SEARCH_QUERIES, MAX_SONG_DURATION_MS } = require('./config');
 const { readCache, writeCache } = require('./cache');
 
 const spotifyApi = new SpotifyWebApi({
@@ -21,34 +21,28 @@ const refreshClientAccessToken = async () => {
     }
 };
 
-const fetchSongsFromSearch = async () => {
-    // 1. Create an array of 15 random queries
-    const randomQueries = Array.from({ length: 15 }, () =>
-        SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)]
-    );
-
-    // 2. Map queries to an array of promises
-    const searchPromises = randomQueries.map(query =>
-        spotifyApi.searchTracks(query, { limit: 50 })
+const fetchSongsFromSearch = async (yearFilter) => {
+    const shuffledQueries = [...SEARCH_QUERIES].sort(() => 0.5 - Math.random());
+    const randomQueries = shuffledQueries.slice(0, 15);
+    const searchPromises = randomQueries.map(query => {
+        let enhancedQuery = query;
+        if (yearFilter) {
+            enhancedQuery = `${enhancedQuery} year:${yearFilter}`;
+        }
+        return spotifyApi.searchTracks(enhancedQuery, { limit: 50 })
             .catch(err => {
-                console.warn(`Could not fetch tracks for query "${query}":`, err.message);
-                return null; // Return null on error to not break Promise.all
-            })
-    );
-
+                console.warn(`Could not fetch tracks for query "${enhancedQuery}":`, err.message);
+                return null;
+            });
+    });
     try {
-        // 3. Execute all promises in parallel
         const searchResults = await Promise.all(searchPromises);
-
-        // 4. Process the results
-        const allTracks = searchResults
-            .filter(result => result !== null) // Filter out failed requests
-            .flatMap(result => result.body.tracks.items); // Use flatMap to get all tracks in a single array
-
-        return allTracks;
+        return searchResults
+            .filter(result => result !== null)
+            .flatMap(result => result.body.tracks.items);
     } catch (error) {
         console.error('An unexpected error occurred during parallel song fetching:', error);
-        return []; // Return an empty array in case of an unexpected failure
+        return [];
     }
 };
 
@@ -62,27 +56,28 @@ const populateSongsPool = async () => {
             console.log(`Songs loaded from cache: ${songsPool.length} songs.`);
         }
     } catch (cacheError) {
-        console.warn('Could not load songs from cache on startup:', cacheError.message);
+        console.warn('Could not load songs from cache on startup:', cacheError);
     }
 
     await refreshClientAccessToken();
 
     try {
         const freshTracks = await fetchSongsFromSearch();
-        if (freshTracks && freshTracks.length > 0) {
-            const uniqueTracks = freshTracks.filter(
-                (item, index, self) =>
-                item && item.id && self.findIndex((t) => t && t.id === item.id) === index
-            );
+        
+        const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
+        let filteredTracks = freshTracks.filter(track =>
+            track && track.name && track.album &&
+            !audiobookRegex.test(track.name) &&
+            !audiobookRegex.test(track.album.name)
+        );
+        filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+        filteredTracks = filteredTracks.filter(
+            (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
+        );
 
-            const newSongsPool = uniqueTracks.map((item) => ({
-                id: item.id,
-                title: item.name,
-                artist: item.artists.map((artist) => artist.name).join(', '),
-                embed: `<iframe src="https://open.spotify.com/embed/track/${item.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
-            }));
-            songsPool = newSongsPool;
-            await writeCache(songsPool);
+        if (filteredTracks.length > 0) {
+            songsPool = filteredTracks; // Store full track objects in the pool
+            await writeCache(songsPool); // Write full track objects to cache
             console.log(`Successfully fetched and mapped ${songsPool.length} unique songs into the pool and updated cache.`);
         } else if (!cacheLoaded) {
             console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
@@ -91,69 +86,83 @@ const populateSongsPool = async () => {
         }
     } catch (fetchError) {
         console.error('Error fetching fresh songs:', fetchError);
-        if (!cacheLoaded) {
-            console.warn('Failed to fetch new songs, and no cache was loaded. Song pool might be empty.');
-        }
     }
 };
 
-const getSongsForBattle = async (count, playlistUrl) => {
+const getSongsForBattle = async (count, playlistUrl, decade) => {
     let tracksToSelect = [];
+    let warning = null;
 
-    if (playlistUrl) {
-        const playlistIdMatch = playlistUrl.match(/playlist\/([a-zA-Z0-9]+)/);
-        if (playlistIdMatch && playlistIdMatch[1]) {
-            const playlistId = playlistIdMatch[1];
-            try {
-                if (!clientAccessToken || spotifyApi.getAccessToken() !== clientAccessToken) {
-                    await refreshClientAccessToken();
-                }
-                let allPlaylistItems = [];
-                let offset = 0;
-                let hasMore = true;
-                const hardCapFetchLimit = 1000;
+    if (decade) {
+        const yearFilter = `${decade.substring(0, 4)}-${parseInt(decade.substring(0, 4)) + 9}`;
+        const freshTracks = await fetchSongsFromSearch(yearFilter);
 
-                const initialPlaylistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 1, offset: 0 });
-                const totalTracksInPlaylist = initialPlaylistData.body.total;
-                const effectiveFetchLimit = Math.min(totalTracksInPlaylist, hardCapFetchLimit);
+        const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
+        let filteredTracks = freshTracks.filter(track =>
+            track && track.name && track.album &&
+            !audiobookRegex.test(track.name) &&
+            !audiobookRegex.test(track.album.name)
+        );
+        filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+        tracksToSelect = filteredTracks.filter(
+            (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
+        );
 
-                while (hasMore && allPlaylistItems.length < effectiveFetchLimit) {
-                    const limit = Math.min(100, effectiveFetchLimit - allPlaylistItems.length);
-                    if (limit <= 0) break;
-
-                    const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: limit, offset: offset });
-                    allPlaylistItems = allPlaylistItems.concat(playlistData.body.items);
-                    offset += playlistData.body.items.length;
-                    hasMore = playlistData.body.next !== null;
-                }
-
-                const playlistTracks = allPlaylistItems
-                    .filter(item => item && item.track)
-                    .map(item => ({
-                        id: item.track.id,
-                        title: item.track.name,
-                        artist: item.track.artists.map(artist => artist.name).join(', '),
-                        embed: `<iframe src="https://open.spotify.com/embed/track/${item.track.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
-                    }));
-
-                tracksToSelect = playlistTracks.filter(
-                    (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
-                );
-                console.log(`Fetched ${tracksToSelect.length} songs from provided playlist.`);
-            } catch (error) {
-                console.error(`Error fetching songs from playlist ${playlistId}:`, error);
-                tracksToSelect = songsPool;
-                console.log('Falling back to general song pool due to playlist fetch error.');
-            }
-        } else {
-            console.warn('Invalid playlist URL provided. Falling back to general song pool.');
+    } else if (playlistUrl) {
+        if (!playlistUrl.includes('/playlist/')) {
             tracksToSelect = songsPool;
+            warning = 'The provided URL is not a Spotify playlist URL. Using the general song pool instead.';
+        } else {
+            const playlistIdMatch = playlistUrl.match(/playlist\/([a-zA-Z0-9]+)/);
+            if (playlistIdMatch && playlistIdMatch[1]) {
+                const playlistId = playlistIdMatch[1];
+                try {
+                    if (!clientAccessToken || spotifyApi.getAccessToken() !== clientAccessToken) {
+                        await refreshClientAccessToken();
+                    }
+                    let allPlaylistItems = [];
+                    let offset = 0;
+                    let hasMore = true;
+                    const hardCapFetchLimit = 1000;
+                    const initialPlaylistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 1, offset: 0 });
+                    const totalTracksInPlaylist = initialPlaylistData.body.total;
+                    const effectiveFetchLimit = Math.min(totalTracksInPlaylist, hardCapFetchLimit);
+                    while (hasMore && allPlaylistItems.length < effectiveFetchLimit) {
+                        const limit = Math.min(100, effectiveFetchLimit - allPlaylistItems.length);
+                        if (limit <= 0) break;
+                        const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: limit, offset: offset });
+                        allPlaylistItems = allPlaylistItems.concat(playlistData.body.items);
+                        offset += playlistData.body.items.length;
+                        hasMore = playlistData.body.next !== null;
+                    }
+                    let playlistTracks = allPlaylistItems.map(item => item.track).filter(track => track);
+                    
+                    const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
+                    let filteredTracks = playlistTracks.filter(track =>
+                        track && track.name && track.album &&
+                        !audiobookRegex.test(track.name) &&
+                        !audiobookRegex.test(track.album.name)
+                    );
+                    filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
+                    tracksToSelect = filteredTracks.filter(
+                        (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
+                    );
+
+                } catch (error) {
+                    console.error(`Error fetching songs from playlist ${playlistId}:`, error);
+                    tracksToSelect = songsPool;
+                    warning = `Could not load the provided playlist. Using the general song pool instead.`;
+                }
+            } else {
+                tracksToSelect = songsPool;
+                warning = 'The provided playlist URL was invalid. Using the general song pool instead.';
+            }
         }
     } else {
         tracksToSelect = songsPool;
     }
 
-    if (tracksToSelect.length === 0) {
+    if (!tracksToSelect || tracksToSelect.length === 0) {
         throw new Error('Song pool is empty.');
     }
     if (tracksToSelect.length < count) {
@@ -161,9 +170,17 @@ const getSongsForBattle = async (count, playlistUrl) => {
     }
 
     const shuffled = [...tracksToSelect].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-};
+    const selectedFullTracks = shuffled.slice(0, count);
+    
+    const selectedSongs = selectedFullTracks.map((item) => ({
+        id: item.id,
+        title: item.name,
+        artist: item.artists.map((artist) => artist.name).join(', '),
+        embed: `<iframe src="https://open.spotify.com/embed/track/${item.id}?utm_source=generator&theme=0" width="100%" height="280" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
+    }));
 
+    return { songs: selectedSongs, warning };
+};
 
 module.exports = {
     populateSongsPool,
