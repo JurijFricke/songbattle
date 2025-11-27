@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
 
 // Define the shape of the context state
 interface GameState {
@@ -24,17 +24,17 @@ export const GameProvider = ({ children }: GameProviderProps) => {
   const [playlistUrl, setPlaylistUrl] = useState<string | undefined>(undefined);
   const [decade, setDecade] = useState<string | undefined>(undefined);
 
-  const startGame = (count: number, url?: string, dec?: string) => {
+  const startGame = useCallback((count: number, url?: string, dec?: string) => {
     setSongCount(count);
     setPlaylistUrl(url);
     setDecade(dec === 'any' ? undefined : dec);
     setGameStarted(true);
-  };
+  }, []); // Dependencies are setters, which are stable
 
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
     setGameStarted(false);
-    // Keep playlistUrl and decade so they can be reused for "Play Again"
-  };
+    // Dependencies are setters, which are stable
+  }, []);
 
   const value = {
     gameStarted,
