@@ -29,7 +29,8 @@ const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
       }
 
       try {
-        let url = `https://songbattle-backend.onrender.com/api/songs?count=${songCount}`;
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://songbattle-backend.onrender.com';
+        let url = `${backendUrl}/api/songs?count=${songCount}`;
         if (playlistUrl) {
           url += `&playlistUrl=${encodeURIComponent(playlistUrl)}`;
         } else if (decade) {
