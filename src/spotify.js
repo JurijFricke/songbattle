@@ -95,7 +95,7 @@ const populateSongsPool = async () => {
     }
 };
 
-const getSongsForBattle = async (count, urlInput, decade) => {
+const getSongsForBattle = async (count, playlistUrl, decade) => {
     let tracksToSelect = [];
     let warning = null;
 
@@ -104,32 +104,12 @@ const getSongsForBattle = async (count, urlInput, decade) => {
         const freshTracks = await fetchSongsFromSearch(yearFilter);
         tracksToSelect = applyFilters(freshTracks);
 
-    } else if (urlInput) {
-        if (urlInput.includes('/track/')) {
-            // Handle Track URL for recommendations.
-            console.log('Handling track URL for recommendations.');
-            const trackIdMatch = urlInput.match(/track\/([a-zA-Z0-9]+)/);
-            if (trackIdMatch && trackIdMatch[1]) {
-                const trackId = trackIdMatch[1];
-                try {
-                    const recommendations = await spotifyApi.getRecommendations({
-                        seed_tracks: [trackId],
-                        limit: 50 // Fetch a good number of recommendations
-                    });
-                    tracksToSelect = applyFilters(recommendations.body.tracks);
-                } catch (error) {
-                    console.error(`Error getting recommendations for track ${trackId}:`, error);
-                    tracksToSelect = songsPool;
-                    warning = `Could not get recommendations for the provided track. Using the general song pool instead.`;
-                }
-            } else {
-                tracksToSelect = songsPool;
-                warning = 'The provided track URL was invalid. Using the general song pool instead.';
-            }
-
-        } else if (urlInput.includes('/playlist/')) {
-            // Handle Playlist URL
-            const playlistIdMatch = urlInput.match(/playlist\/([a-zA-Z0-9]+)/);
+    } else if (playlistUrl) {
+        if (!playlistUrl.includes('/playlist/')) {
+            tracksToSelect = songsPool;
+            warning = 'The provided URL is not a Spotify playlist URL. Using the general song pool instead.';
+        } else {
+            const playlistIdMatch = playlistUrl.match(/playlist\/([a-zA-Z0-9]+)/);
             if (playlistIdMatch && playlistIdMatch[1]) {
                 const playlistId = playlistIdMatch[1];
                 try {
@@ -140,19 +120,24 @@ const getSongsForBattle = async (count, urlInput, decade) => {
                     let offset = 0;
                     let hasMore = true;
                     const hardCapFetchLimit = 1000;
+
                     const initialPlaylistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: 1, offset: 0 });
                     const totalTracksInPlaylist = initialPlaylistData.body.total;
                     const effectiveFetchLimit = Math.min(totalTracksInPlaylist, hardCapFetchLimit);
+
                     while (hasMore && allPlaylistItems.length < effectiveFetchLimit) {
                         const limit = Math.min(100, effectiveFetchLimit - allPlaylistItems.length);
                         if (limit <= 0) break;
+
                         const playlistData = await spotifyApi.getPlaylistTracks(playlistId, { limit: limit, offset: offset });
                         allPlaylistItems = allPlaylistItems.concat(playlistData.body.items);
                         offset += playlistData.body.items.length;
                         hasMore = playlistData.body.next !== null;
                     }
+
                     let playlistTracks = allPlaylistItems.map(item => item.track).filter(track => track);
                     tracksToSelect = applyFilters(playlistTracks);
+
                 } catch (error) {
                     console.error(`Error fetching songs from playlist ${playlistId}:`, error);
                     tracksToSelect = songsPool;
@@ -162,9 +147,6 @@ const getSongsForBattle = async (count, urlInput, decade) => {
                 tracksToSelect = songsPool;
                 warning = 'The provided playlist URL was invalid. Using the general song pool instead.';
             }
-        } else {
-            tracksToSelect = songsPool;
-            warning = 'The provided URL is not a valid Spotify Track or Playlist URL. Using the general song pool instead.';
         }
     } else {
         tracksToSelect = songsPool;
@@ -176,10 +158,8 @@ const getSongsForBattle = async (count, urlInput, decade) => {
     if (tracksToSelect.length < count) {
         throw new Error(`Not enough unique songs available. Requested ${count}, but only ${tracksToSelect.length} loaded.`);
     }
-    
-    console.log('tracksToSelect before shuffle:', tracksToSelect);
+
     const shuffled = [...tracksToSelect].sort(() => 0.5 - Math.random());
-    console.log('shuffled before slice:', shuffled);
     const selectedFullTracks = shuffled.slice(0, count);
     
     const selectedSongs = selectedFullTracks.map((item) => ({
