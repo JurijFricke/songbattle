@@ -9,40 +9,12 @@ const apiRoutes = require('./src/routes');
 const app = express();
 const port = 3001;
 
-//===============
 // MIDDLEWARE
 //===============
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://127.0.0.1:3000'];
-
-app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-
-        // Allow from the configured origins
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            return callback(null, true);
-        }
-
-        // Always allow any Netlify preview URL (for single service deployment strategy)
-        if (new RegExp("https://.*--songbattle-frontend.netlify.app").test(origin)) {
-            return callback(null, true);
-        }
-
-        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-        return callback(new Error(msg), false);
-    },
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-}));
+// TEMPORARY: Allow all origins for debugging
+app.use(cors({ credentials: true, origin: true }));
 
 app.use(express.json());
-
-//===============
-// API ROUTES
-//===============
-app.use('/api', apiRoutes);
 
 //===============
 // SERVER STARTUP
