@@ -95,31 +95,41 @@ const populateSongsPool = async () => {
     }
 };
 
-const getSongsForBattle = async (count, playlistUrl, decade) => {
+const getSongsForBattle = async (count, urlInput, decade) => {
     let tracksToSelect = [];
     let warning = null;
 
     if (decade) {
         const yearFilter = `${decade.substring(0, 4)}-${parseInt(decade.substring(0, 4)) + 9}`;
         const freshTracks = await fetchSongsFromSearch(yearFilter);
+        tracksToSelect = applyFilters(freshTracks);
 
-        const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
-        let filteredTracks = freshTracks.filter(track =>
-            track && track.name && track.album &&
-            !audiobookRegex.test(track.name) &&
-            !audiobookRegex.test(track.album.name)
-        );
-        filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
-        tracksToSelect = filteredTracks.filter(
-            (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
-        );
+    } else if (urlInput) {
+        if (urlInput.includes('/track/')) {
+            // Handle Track URL for recommendations.
+            console.log('Handling track URL for recommendations.');
+            const trackIdMatch = urlInput.match(/track\/([a-zA-Z0-9]+)/);
+            if (trackIdMatch && trackIdMatch[1]) {
+                const trackId = trackIdMatch[1];
+                try {
+                    const recommendations = await spotifyApi.getRecommendations({
+                        seed_tracks: [trackId],
+                        limit: 50 // Fetch a good number of recommendations
+                    });
+                    tracksToSelect = applyFilters(recommendations.body.tracks);
+                } catch (error) {
+                    console.error(`Error getting recommendations for track ${trackId}:`, error);
+                    tracksToSelect = songsPool;
+                    warning = `Could not get recommendations for the provided track. Using the general song pool instead.`;
+                }
+            } else {
+                tracksToSelect = songsPool;
+                warning = 'The provided track URL was invalid. Using the general song pool instead.';
+            }
 
-    } else if (playlistUrl) {
-        if (!playlistUrl.includes('/playlist/')) {
-            tracksToSelect = songsPool;
-            warning = 'The provided URL is not a Spotify playlist URL. Using the general song pool instead.';
-        } else {
-            const playlistIdMatch = playlistUrl.match(/playlist\/([a-zA-Z0-9]+)/);
+        } else if (urlInput.includes('/playlist/')) {
+            // Handle Playlist URL
+            const playlistIdMatch = urlInput.match(/playlist\/([a-zA-Z0-9]+)/);
             if (playlistIdMatch && playlistIdMatch[1]) {
                 const playlistId = playlistIdMatch[1];
                 try {
@@ -142,18 +152,7 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
                         hasMore = playlistData.body.next !== null;
                     }
                     let playlistTracks = allPlaylistItems.map(item => item.track).filter(track => track);
-                    
-                    const audiobookRegex = /hörbuch|audiobook|unabridged|part \d+|chapter \d+/i;
-                    let filteredTracks = playlistTracks.filter(track =>
-                        track && track.name && track.album &&
-                        !audiobookRegex.test(track.name) &&
-                        !audiobookRegex.test(track.album.name)
-                    );
-                    filteredTracks = filteredTracks.filter(track => track.duration_ms < MAX_SONG_DURATION_MS);
-                    tracksToSelect = filteredTracks.filter(
-                        (item, index, self) => item && item.id && self.findIndex(t => t && t.id === item.id) === index
-                    );
-
+                    tracksToSelect = applyFilters(playlistTracks);
                 } catch (error) {
                     console.error(`Error fetching songs from playlist ${playlistId}:`, error);
                     tracksToSelect = songsPool;
@@ -163,6 +162,9 @@ const getSongsForBattle = async (count, playlistUrl, decade) => {
                 tracksToSelect = songsPool;
                 warning = 'The provided playlist URL was invalid. Using the general song pool instead.';
             }
+        } else {
+            tracksToSelect = songsPool;
+            warning = 'The provided URL is not a valid Spotify Track or Playlist URL. Using the general song pool instead.';
         }
     } else {
         tracksToSelect = songsPool;

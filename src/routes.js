@@ -4,12 +4,12 @@ const router = express.Router();
 
 router.get('/songs', async (req, res) => {
     const count = parseInt(req.query.count) || 16;
-    const playlistUrl = req.query.playlistUrl;
-    const decade = req.query.decade; // Read the decade from query params
-    console.log('Received /api/songs request. Count:', count, 'Playlist URL:', playlistUrl, 'Decade:', decade);
+    const urlInput = req.query.playlistUrl; // Keep frontend param name, but use generic name internally
+    const decade = req.query.decade;
+    console.log('Received /api/songs request. Count:', count, 'URL Input:', urlInput, 'Decade:', decade);
 
     try {
-        const { songs, warning } = await getSongsForBattle(count, playlistUrl, decade);
+        const { songs, warning } = await getSongsForBattle(count, urlInput, decade);
         if (warning) {
             res.json({ songs, warning });
         } else {
