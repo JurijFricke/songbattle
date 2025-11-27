@@ -18,6 +18,7 @@ const SongBattle = () => {
   const [isBattleLoading, setIsBattleLoading] = useState(false);
 
   useEffect(() => {
+    console.log('SongBattle useEffect is running with:', { songCount, playlistUrl, decade });
     const loadSongs = async () => {
       setErrorMessage(null);
       setContenders([]);
