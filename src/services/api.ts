@@ -15,6 +15,7 @@ export const fetchSongsAPI = async (count: number, playlistUrl?: string, decade?
     url += `&decade=${decade}`;
   }
 
+  console.log('Fetching from URL:', url); // Add this for debugging
   const response = await fetch(url);
 
   if (!response.ok) {
