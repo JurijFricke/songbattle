@@ -1,5 +1,5 @@
 const SpotifyWebApi = require('spotify-web-api-node');
-const { SEARCH_QUERIES, MAX_SONG_DURATION_MS } = require('./config');
+const { SEARCH_QUERIES, MAX_SONG_DURATION_MS, MIN_TRACK_POPULARITY } = require('./config');
 const { readCache, writeCache } = require('./cache');
 
 const spotifyApi = new SpotifyWebApi({
