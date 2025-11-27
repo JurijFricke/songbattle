@@ -1,34 +1,28 @@
-import React, { useState } from 'react';
+import React from 'react';
 import StartMenu from './components/StartMenu';
 import SongBattle from './components/SongBattle';
-import styles from './App.module.css'; // Import the CSS module
+import styles from './App.module.css';
+import { GameProvider, useGame } from './context/GameContext';
 
-function App() {
-  const [gameStarted, setGameStarted] = useState(false);
-  const [songCount, setSongCount] = useState(16);
-  const [selectedPlaylistUrl, setSelectedPlaylistUrl] = useState<string | undefined>(undefined);
-  const [decade, setDecade] = useState<string | undefined>(undefined);
-
-  const startGame = (count: number, playlistUrl?: string, decade?: string) => {
-    setSongCount(count);
-    setSelectedPlaylistUrl(playlistUrl);
-    setDecade(decade === 'any' ? undefined : decade); // Set decade, or undefined if 'any'
-    setGameStarted(true);
-  };
-
-  const resetGame = () => {
-    setGameStarted(false);
-  };
+// This component now decides which view to show based on context
+const AppContent = () => {
+  const { gameStarted } = useGame();
 
   return (
-    <div className={styles.appContainer}>
+    <>
       <h1>Song Battle</h1>
-      {gameStarted ? (
-        <SongBattle songCount={songCount} playlistUrl={selectedPlaylistUrl} decade={decade} resetGame={resetGame} />
-      ) : (
-        <StartMenu startGame={startGame} initialPlaylistUrl={selectedPlaylistUrl} />
-      )}
-    </div>
+      {gameStarted ? <SongBattle /> : <StartMenu />}
+    </>
+  );
+};
+
+function App() {
+  return (
+    <GameProvider>
+      <div className={styles.appContainer}>
+        <AppContent />
+      </div>
+    </GameProvider>
   );
 }
 

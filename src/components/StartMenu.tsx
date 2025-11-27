@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import styles from './StartMenu.module.css'; // Import the CSS module
+import styles from './StartMenu.module.css';
+import { useGame } from '../context/GameContext'; // Import the custom hook
 
-interface Props {
-  startGame: (songCount: number, playlistUrl?: string, decade?: string) => void;
-  initialPlaylistUrl?: string;
-}
+const StartMenu = () => {
+  const { startGame, playlistUrl: initialPlaylistUrl } = useGame(); // Get what's needed from context
 
-const StartMenu = ({ startGame, initialPlaylistUrl }: Props) => {
   const [songCount, setSongCount] = useState(16);
   const [playlistUrl, setPlaylistUrl] = useState(initialPlaylistUrl || '');
   const [decade, setDecade] = useState('any');
@@ -71,5 +69,7 @@ const StartMenu = ({ startGame, initialPlaylistUrl }: Props) => {
     </div>
   );
 };
+
+export default StartMenu;
 
 export default StartMenu;

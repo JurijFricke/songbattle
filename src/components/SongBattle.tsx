@@ -1,17 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Song } from '../types/Song';
 import ProgressBar from './ProgressBar';
 import { fetchSongsAPI } from '../services/api';
-import styles from './SongBattle.module.css'; // Import the CSS module
+import styles from './SongBattle.module.css';
+import { useGame } from '../context/GameContext'; // Import the custom hook
 
-interface Props {
-  songCount: number;
-  playlistUrl?: string;
-  decade?: string;
-  resetGame: () => void;
-}
-
-const SongBattle = ({ songCount, playlistUrl, decade, resetGame }: Props) => {
+const SongBattle = () => {
+  const { songCount, playlistUrl, decade, resetGame } = useGame(); // Get state from context
   const [round, setRound] = useState(1);
   const [contenders, setContenders] = useState<Song[]>([]);
   const [nextContenders, setNextContenders] = useState<Song[]>([]);
