@@ -1,14 +1,48 @@
 const express = require('express');
+const cors = require('cors');
 const { getSongsForBattle } = require('./spotify');
-const { BattleResult, Song } = require('./database'); // Import models
+const { BattleResult, Song } = require('./database');
 const router = express.Router();
 
-router.get('/songs', async (req, res) => {
-    // ... (existing /songs logic)
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://127.0.0.1:3000'];
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            return callback(null, true);
+        }
+        if (new RegExp("https://.*--songbattle-frontend.netlify.app").test(origin)) {
+            return callback(null, true);
+        }
+        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+        return callback(new Error(msg), false);
+    },
+    credentials: true,
+    optionsSuccessStatus: 204
+};
+
+router.options('*', cors(corsOptions));
+
+router.get('/songs', cors(corsOptions), async (req, res) => {
+    const count = parseInt(req.query.count) || 16;
+    const playlistUrl = req.query.playlistUrl;
+    const decade = req.query.decade;
+    console.log('Received /api/songs request. Count:', count, 'Playlist URL:', playlistUrl, 'Decade:', decade);
+
+    try {
+        const { songs, warning } = await getSongsForBattle(count, playlistUrl, decade);
+        if (warning) {
+            res.json({ songs, warning });
+        } else {
+            res.json({ songs });
+        }
+    } catch (error) {
+        console.error('Error in /api/songs route:', error.message);
+        res.status(503).json({ error: error.message || 'Failed to get songs.' });
+    }
 });
 
-// Endpoint to save the result of a battle
-router.post('/result', async (req, res) => {
+router.post('/result', cors(corsOptions), async (req, res) => {
     try {
         const { winnerSongId, loserSongId } = req.body;
         if (!winnerSongId || !loserSongId) {
@@ -23,33 +57,24 @@ router.post('/result', async (req, res) => {
     }
 });
 
-// Endpoint to get the top 10 winners
-router.get('/stats', async (req, res) => {
+router.get('/stats', cors(corsOptions), async (req, res) => {
     try {
-        // 1. Aggregate results to get top 10 winner IDs and their win counts
         const topWinners = await BattleResult.aggregate([
             { $group: { _id: '$winnerSongId', wins: { $sum: 1 } } },
             { $sort: { wins: -1 } },
             { $limit: 10 }
         ]);
 
-        if (topWinners.length === 0) {
-            return res.json([]);
-        }
+        if (topWinners.length === 0) return res.json([]);
 
-        // 2. Get the song IDs from the aggregation result
         const topWinnerIds = topWinners.map(winner => winner._id);
-
-        // 3. Find the song details for these IDs from the 'songs' collection
         const songDetails = await Song.find({ _id: { $in: topWinnerIds } }).lean();
         
-        // 4. Map song details into a lookup object for easy access
         const songDetailsMap = songDetails.reduce((map, song) => {
-            map[song._id] = song.track; // Assuming song.track holds the raw track object
+            map[song._id] = song.track;
             return map;
         }, {});
 
-        // 5. Combine the win counts with the song details
         const leaderboard = topWinners.map(winner => {
             const details = songDetailsMap[winner._id];
             return {
