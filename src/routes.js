@@ -21,8 +21,7 @@ const corsOptions = {
     optionsSuccessStatus: 204
 };
 
-router.options('*', cors(corsOptions));
-
+// Handle preflight requests on a per-route basis via the cors middleware
 router.get('/songs', cors(corsOptions), async (req, res) => {
     const count = parseInt(req.query.count) || 16;
     const playlistUrl = req.query.playlistUrl;
