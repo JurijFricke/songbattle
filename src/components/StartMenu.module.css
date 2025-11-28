@@ -1,16 +1,61 @@
 .startMenuSection {
   margin-bottom: 20px;
+  text-align: center; /* Center content within each section */
 }
 
-.customSelect {
-  /* Default styles for select, currently defined in index.css */
+.startMenuSection label {
+  display: block; /* Ensure label takes full width */
+  margin-bottom: 8px; /* Space between label and control */
+  font-size: 1.1rem;
+  color: #333;
 }
 
+.customSelect,
 .customInput {
-  /* Default styles for input, currently defined in index.css */
+  width: 100%;
+  max-width: 300px; /* Limit width for better appearance */
+  padding: 10px 15px;
+  margin-bottom: 10px; /* Space below control */
+  border: 1px solid #ccc;
+  border-radius: 25px; /* More rounded corners */
+  background-color: #fff;
+  font-size: 1rem;
+  color: #333;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.customSelect:focus,
+.customInput:focus {
+  border-color: #1DB954; /* Spotify green */
+  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.2); /* Green glow */
+  outline: none;
 }
 
 .startGameButton {
-  margin-top: 20px;
-  /* Default styles for start-game-button, currently defined in index.css */
+  margin-top: 30px; /* More space above the button */
+  padding: 12px 30px;
+  background-color: #1DB954; /* Spotify green */
+  color: white;
+  border: none;
+  border-radius: 30px; /* Very rounded */
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.startGameButton:hover {
+  background-color: #1AA34A; /* Slightly darker green */
+  transform: translateY(-2px); /* Slight lift effect */
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.startGameButton:active {
+  background-color: #178F42; /* Even darker green */
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
