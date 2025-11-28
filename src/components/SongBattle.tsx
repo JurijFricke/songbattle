@@ -4,6 +4,7 @@ import ProgressBar from './ProgressBar';
 import { fetchSongsAPI, saveBattleResultAPI } from '../services/api';
 import styles from './SongBattle.module.css';
 import { useGame } from '../context/GameContext';
+import ReactConfetti from 'react-confetti';
 
 const SongBattle = () => {
   const { songCount, playlistUrl, decade, resetGame } = useGame();
@@ -18,7 +19,7 @@ const SongBattle = () => {
   const [isBattleLoading, setIsBattleLoading] = useState(false);
   const [currentWinnerId, setCurrentWinnerId] = useState<string | null>(null); // New state for winner animation
   const [currentLoserId, setCurrentLoserId] = useState<string | null>(null); // New state for loser animation
-
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     const loadSongs = async () => {
@@ -45,6 +46,17 @@ const SongBattle = () => {
     };
     loadSongs();
   }, [songCount, playlistUrl, decade]);
+
+  // Effect to run confetti when a winner is declared
+  useEffect(() => {
+    if (winner) {
+      setShowConfetti(true);
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 10000); // Confetti runs for 10 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [winner]);
 
   const handleVote = (selectedSong: Song) => {
     const song1 = contenders[currentBattleIndex];
@@ -100,6 +112,7 @@ const SongBattle = () => {
   if (winner) {
     return (
       <div>
+        {showConfetti && <ReactConfetti />}
         <h2>Winner!</h2>
         <div dangerouslySetInnerHTML={{ __html: winner.embed }} />
         <button onClick={resetGame} className={styles.playAgainButton}>Play Again</button>
