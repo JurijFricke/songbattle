@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import StartMenu from './components/StartMenu';
-import SongBattle from './components/SongBattle';
 import styles from './App.module.css';
 import { GameProvider, useGame } from './context/GameContext';
+
+const SongBattle = lazy(() => import('./components/SongBattle')); // Lazy load the component
 
 // This component now decides which view to show based on context
 const AppContent = () => {
@@ -11,7 +12,13 @@ const AppContent = () => {
   return (
     <>
       <h1>Song Battle</h1>
-      {gameStarted ? <SongBattle /> : <StartMenu />}
+      {gameStarted ? (
+        <Suspense fallback={<div>Loading Game...</div>}>
+          <SongBattle />
+        </Suspense>
+      ) : (
+        <StartMenu />
+      )}
     </>
   );
 };
