@@ -27,15 +27,52 @@
 }
 
 .vsText {
-  /* default styles for vs-text */
+  font-size: 3rem; /* Make VS. bigger */
+  font-weight: bold;
+  color: #555;
+  align-self: center; /* Align vertically in flex container */
 }
 
 .voteButton {
-  /* default styles for vote-button */
+  margin-top: 15px;
+  padding: 15px 40px; /* Bigger padding */
+  background-color: #1DB954; /* Spotify green */
+  color: white;
+  border: none;
+  border-radius: 30px; /* Very rounded */
+  font-size: 1.5rem; /* Bigger font size */
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 100%; /* Make button span full width of panel */
+}
+
+.voteButton:hover {
+  background-color: #1AA34A; /* Slightly darker green */
+  transform: translateY(-2px); /* Slight lift effect */
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.voteButton:active {
+  background-color: #178F42; /* Even darker green */
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .votedButton {
-  /* default styles for voted-button */
+  background-color: #178F42; /* Darker green when voted */
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  animation: votedGlow 0.5s ease-out forwards;
+}
+
+@keyframes votedGlow {
+  0% { box-shadow: 0 0 0 0px rgba(29, 185, 84, 0.7); }
+  50% { box-shadow: 0 0 0 10px rgba(29, 185, 84, 0); }
+  100% { box-shadow: 0 0 0 0px rgba(29, 185, 84, 0); }
 }
 
 .playAgainButton {
