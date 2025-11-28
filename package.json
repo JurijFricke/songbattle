@@ -21,7 +21,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "eslintConfig": {
     "extends": [
@@ -42,6 +43,7 @@
     ]
   },
   "devDependencies": {
-    "@types/spotify-web-playback-sdk": "^0.1.19"
+    "@types/spotify-web-playback-sdk": "^0.1.19",
+    "source-map-explorer": "^2.5.3"
   }
 }
