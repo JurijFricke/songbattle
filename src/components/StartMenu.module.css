@@ -35,6 +35,7 @@
   background-position: right 15px center;
   background-size: 1em;
   padding-right: 40px; /* Make space for the arrow */
+  text-align-last: center; /* Center the selected option text */
 }
 
 .customInput {
