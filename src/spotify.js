@@ -31,7 +31,7 @@ const fetchSongsFromSearch = async (yearFilter) => {
         }
         return spotifyApi.searchTracks(enhancedQuery, { limit: 50 })
             .catch(err => {
-                console.warn(`Could not fetch tracks for query "${enhancedQuery}":`, err.message);
+                console.warn(`Could not fetch tracks for query "${enhancedQuery}":`, err); // Log entire error object
                 return null;
             });
     });
