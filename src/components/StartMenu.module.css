@@ -19,11 +19,28 @@
   border: 1px solid #ccc;
   border-radius: 25px; /* More rounded corners */
   background-color: #fff;
-  font-size: 1rem;
+  font-size: 1.1rem; /* Slightly larger font */
+  font-weight: bold; /* Make selected option stand out */
   color: #333;
   transition: all 0.2s ease-in-out;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
+
+.customSelect {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%00-13.6-6.4H18.6c-5%200-9.3%201.8-13.6%206.4-4.2%204.6-6.4%2010.5-6.4%2016.4%200%205.9%202.2%2011.8%206.4%2016.4l127.9%20127.9c4.2%204.2%2010.2%206.4%2016.4%206.4s12.2-2.2%2016.4-6.4L287%20102.2c4.2-4.6%206.4-10.5%206.4-16.4%200-5.9-2.2-11.8-6.4-16.4z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 1em;
+  padding-right: 40px; /* Make space for the arrow */
+}
+
+.customInput {
+  /* ... (existing styles) ... */
+}
+
 
 .customSelect:focus,
 .customInput:focus {
