@@ -16,6 +16,9 @@ const SongBattle = () => {
   const [isPlaylistLoading, setIsPlaylistLoading] = useState(false);
   const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null);
   const [isBattleLoading, setIsBattleLoading] = useState(false);
+  const [currentWinnerId, setCurrentWinnerId] = useState<string | null>(null); // New state for winner animation
+  const [currentLoserId, setCurrentLoserId] = useState<string | null>(null); // New state for loser animation
+
 
   useEffect(() => {
     const loadSongs = async () => {
@@ -51,10 +54,14 @@ const SongBattle = () => {
     saveBattleResultAPI(selectedSong.id, loserSong.id);
 
     setLastClickedButtonId(selectedSong.id);
+    setCurrentWinnerId(selectedSong.id); // Set for animation
+    setCurrentLoserId(loserSong.id);     // Set for animation
     setIsBattleLoading(true);
 
     setTimeout(() => {
       setLastClickedButtonId(null);
+      setCurrentWinnerId(null); // Reset for next battle
+      setCurrentLoserId(null);   // Reset for next battle
 
       const newNextContenders = [...nextContenders, selectedSong];
       const nextBattleIndexCandidate = currentBattleIndex + 2;
@@ -125,12 +132,12 @@ const SongBattle = () => {
       ) : (
         <>
           <div className={styles.songBattleContainer}>
-            <div className={styles.songPanel}>
+            <div className={`${styles.songPanel} ${currentWinnerId === song1.id ? styles.winner : currentLoserId === song1.id ? styles.loser : ''}`}>
               <div dangerouslySetInnerHTML={{ __html: song1.embed }} />
               <button onClick={() => handleVote(song1)} className={`${styles.voteButton} ${lastClickedButtonId === song1.id ? styles.votedButton : ''}`}>Vote</button>
             </div>
             <div className={styles.vsText}>VS.</div>
-            <div className={styles.songPanel}>
+            <div className={`${styles.songPanel} ${currentWinnerId === song2.id ? styles.winner : currentLoserId === song2.id ? styles.loser : ''}`}>
               <div dangerouslySetInnerHTML={{ __html: song2.embed }} />
               <button onClick={() => handleVote(song2)} className={`${styles.voteButton} ${lastClickedButtonId === song2.id ? styles.votedButton : ''}`}>Vote</button>
             </div>

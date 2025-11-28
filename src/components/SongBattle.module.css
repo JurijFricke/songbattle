@@ -24,6 +24,18 @@
 
 .songPanel {
   width: 450px;
+  position: relative; /* For absolute positioning of effects */
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.songPanel.winner {
+  transform: scale(1.03); /* Slightly grow winner */
+  box-shadow: 0 0 15px rgba(29, 185, 84, 0.6);
+}
+
+.songPanel.loser {
+  opacity: 0.5; /* Fade out loser */
+  transform: scale(0.97); /* Slightly shrink loser */
 }
 
 .vsText {
@@ -65,14 +77,8 @@
 .votedButton {
   background-color: #178F42; /* Darker green when voted */
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  animation: votedGlow 0.5s ease-out forwards;
-}
-
-@keyframes votedGlow {
-  0% { box-shadow: 0 0 0 0px rgba(29, 185, 84, 0.7); }
-  50% { box-shadow: 0 0 0 10px rgba(29, 185, 84, 0); }
-  100% { box-shadow: 0 0 0 0px rgba(29, 185, 84, 0); }
+  box-shadow: 0 2px 4px rgba(29, 185, 84, 0.7); /* Change the glow */
+  animation: none; /* Disable previous glow animation for voted button */
 }
 
 .playAgainButton {
