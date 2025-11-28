@@ -19,3 +19,5 @@ const StartMenu = () => {
     </div>
   );
 };
+
+export default StartMenu;
