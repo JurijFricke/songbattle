@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import StartMenu from './components/StartMenu';
 import styles from './App.module.css';
 import { GameProvider, useGame } from './context/GameContext';
