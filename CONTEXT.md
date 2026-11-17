@@ -14,6 +14,23 @@ git status --short --branch
 
 Continue on `dev`, not `main`.
 
+## Oracle VM access
+
+VM address:
+
+```text
+152.70.30.118
+```
+
+SSH command:
+
+```bash
+ssh ubuntu@152.70.30.118
+```
+
+Use the configured SSH key. Never place private keys, passwords, or Spotify
+credentials in this file.
+
 ## User decisions and requirements
 
 - Authoritative baseline: `origin/dev` from both original repositories.
@@ -72,8 +89,8 @@ active repository at:
 C:\Users\jurij\projects\songbattle_old
 ```
 
-The new GitHub remote is configured, but the new repository has not yet been
-fully pushed/promoted. Do not force-push or delete the original GitHub
+The new GitHub remote is configured and the current `main`, `dev`, and archive
+branches have been pushed. Do not force-push or delete the original GitHub
 repositories until production validation is complete.
 
 ## Completed work
@@ -242,13 +259,13 @@ staging.example-domain → staging
 11. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
     scheduled SQLite backups plus a tested restore procedure.
 12. Configure GitHub Actions for checks and staging/production deployment.
-13. Push active `main`, `dev`, and archive branches to the new GitHub remote.
-14. Promote the validated `dev` state to `main`, deploy production, and retain
+13. Promote the validated `dev` state to `main`, deploy production, and retain
     old GitHub repositories until the user explicitly approves retirement.
 
 ## Latest commits on active dev
 
 ```text
+d6a3b88 docs: add project continuation context
 97445d4 fix(backend): use current Spotify playlist items endpoint
 3607a5c test(frontend): add UI and API client coverage
 536777d feat(frontend): modernize responsive and accessible UI
