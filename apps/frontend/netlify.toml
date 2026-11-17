@@ -1,0 +1,20 @@
+# Netlify configuration file
+
+# Production context: All deploys from the main
+# branch will use these settings.
+[context.production]
+  # No specific build command needed here if it's just 'npm run build'
+  # The production environment variables will be used from the Netlify UI.
+  
+# Deploy Preview context: All deploys from pull requests
+# will use these settings.
+[context.deploy-preview]
+  command = "export REACT_APP_BACKEND_URL=\"https://songbattle-backend-pr-$REVIEW_ID.onrender.com\" && npm run build"
+
+# Branch-deploy context: All deploys from branches other
+# than main will use these settings (e.g., our 'dev' branch).
+[context.branch-deploy]
+  # Here, you might want to point to a stable 'dev' backend if you create one.
+  # For now, we'll let it use the production URL as a fallback,
+  # or you can set a specific 'dev' URL in the Netlify UI for this branch.
+

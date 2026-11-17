@@ -1,0 +1,206 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 1.1rem; /* Slightly larger base font */
+  line-height: 1.5; /* Improved readability */
+  color: #333; /* Darker text color */
+  background-color: #f4f4f4; /* Light background for spacious feel */
+}
+
+h1 {
+  font-size: 3.5rem; /* Larger title */
+  font-weight: 700; /* Bolder */
+  color: #1DB954; /* Spotify green */
+  margin-bottom: 20px; /* More space below title */
+}
+
+h2 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #555;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #777;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+label {
+  display: block; /* Make labels block-level for margin-bottom to work */
+  margin-bottom: 8px; /* Space between label and input/select */
+  font-weight: 500; /* Slightly bolder labels */
+  color: #444;
+}
+
+/* Ensure form elements have top margin if not already covered */
+.custom-select, .custom-input {
+  margin-top: 10px; /* Add consistent top margin to form controls */
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.vote-button {
+  font-size: 1.2rem;
+  padding: 8px 15px;
+  background-color: #1DB954; /* Spotify green */
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  margin-top: 10px; /* Adjusted due to global margin-top for form controls */
+  width: 100%;
+  max-width: 250px;
+  transition: background-color 0.2s ease, transform 0.1s ease; /* Smooth transitions */
+}
+
+.vote-button:hover {
+  background-color: #1ed760; /* Slightly lighter green on hover */
+  transform: translateY(-2px); /* Subtle lift effect */
+}
+
+.vote-button:active {
+  background-color: #13833d; /* Slightly darker green on click */
+  transform: translateY(0); /* Return to original position */
+}
+
+.start-game-button {
+  font-size: 1.4rem; /* Slightly larger */
+  padding: 10px 20px;
+  background-color: #1ed760; /* A brighter Spotify green */
+  color: white;
+  border: none;
+  border-radius: 30px; /* Slightly more rounded */
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px; /* Slightly wider */
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add some depth */
+}
+
+.start-game-button:hover {
+  background-color: #24e068; /* Even brighter green on hover */
+  transform: translateY(-3px); /* More pronounced lift */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.start-game-button:active {
+  background-color: #17a74a; /* Darker green on click */
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom Select Dropdown */
+.custom-select {
+  padding: 10px 15px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  appearance: none; /* Remove default browser styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-6.5%200-12.3%203.2-16.2%208.4-3.9%205.2-4.6%2012.3-1.7%2018.6l127.3%20152.9c3.2%203.8%207.7%205.8%2012.2%205.8s9.1-2.1%2012.2-5.8l127.3-152.9c3-6.3%202.3-13.4-1.6-18.6z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-select:focus {
+  border-color: #1DB954;
+  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.2);
+  outline: none;
+}
+
+/* Custom Text Input */
+.custom-input {
+  padding: 10px 15px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  color: #333;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-input:focus {
+  border-color: #1DB954;
+  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.2);
+  outline: none;
+}
+
+/* Progress Bar Styles */
+.progress-bar-container {
+  width: 80%;
+  max-width: 500px;
+  margin: 15px auto;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.progress-bar-label {
+  font-size: 1.1rem;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.progress-bar-track {
+  width: 100%;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 20px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: #1DB954; /* Spotify green */
+  border-radius: 10px;
+  transition: width 0.3s ease-in-out;
+  text-align: right;
+  padding-right: 5px;
+  color: white; /* Text color if percentage is shown inside */
+  line-height: 20px; /* Vertically align text */
+  font-size: 0.9rem;
+}
+
+.progress-bar-text {
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #666;
+  font-weight: bold;
+}
+
+
+
+/* Voted Button Feedback */
+.voted-button {
+  box-shadow: 0 0 15px 5px rgba(29, 185, 84, 0.7); /* Green glow effect */
+  transform: scale(1.02); /* Slightly grow */
+}
+
+/* VS. Text Styling */
+.vs-text {
+  font-size: 4rem; /* Large font size */
+  font-weight: bold;
+  color: #555; /* Dark grey */
+  align-self: center; /* Center vertically in the flex container */
+  margin: 0 20px; /* Space on left and right */
+  white-space: nowrap; /* Prevent "VS." from wrapping */
+  transform: translateY(-15%); /* Nudge upwards to align visual middle */
+}

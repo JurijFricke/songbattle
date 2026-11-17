@@ -1,0 +1,87 @@
+.errorMessage {
+  color: white;
+  background-color: #e63946; /* Red background for error */
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  max-width: 600px;
+  margin: 0 auto 20px auto; /* Center and add bottom margin */
+}
+
+.battleLoading {
+  margin-top: 50px;
+  font-size: 1.5rem;
+  color: #555;
+}
+
+.songBattleContainer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.songPanel {
+  width: 450px;
+  position: relative; /* For absolute positioning of effects */
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.songPanel.winner {
+  transform: scale(1.03); /* Slightly grow winner */
+  box-shadow: 0 0 15px rgba(29, 185, 84, 0.6);
+}
+
+.songPanel.loser {
+  opacity: 0.5; /* Fade out loser */
+  transform: scale(0.97); /* Slightly shrink loser */
+}
+
+.vsText {
+  font-size: 3rem; /* Make VS. bigger */
+  font-weight: bold;
+  color: #555;
+  align-self: center; /* Align vertically in flex container */
+}
+
+.voteButton {
+  margin-top: 15px;
+  padding: 15px 40px; /* Bigger padding */
+  background-color: #1DB954; /* Spotify green */
+  color: white;
+  border: none;
+  border-radius: 30px; /* Very rounded */
+  font-size: 1.5rem; /* Bigger font size */
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 100%; /* Make button span full width of panel */
+}
+
+.voteButton:hover {
+  background-color: #1AA34A; /* Slightly darker green */
+  transform: translateY(-2px); /* Slight lift effect */
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.voteButton:active {
+  background-color: #178F42; /* Even darker green */
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.votedButton {
+  background-color: #178F42; /* Darker green when voted */
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(29, 185, 84, 0.7); /* Change the glow */
+  animation: none; /* Disable previous glow animation for voted button */
+}
+
+.playAgainButton {
+  margin-top: 30px;
+  /* default styles for start-game-button (reused) */
+}
