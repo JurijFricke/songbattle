@@ -212,6 +212,7 @@ export interface LeaderboardEntry {
   wins: number;
   losses: number;
   appearances: number;
+  winRate: number;
 }
 
 export const getLeaderboard = async (limit = 10): Promise<LeaderboardEntry[]> => {
@@ -231,5 +232,26 @@ export const getLeaderboard = async (limit = 10): Promise<LeaderboardEntry[]> =>
     wins: stats.wins,
     losses: stats.losses,
     appearances: stats.appearances,
+    winRate: stats.appearances > 0 ? stats.wins / stats.appearances : 0,
   }));
+};
+
+export const getSongStats = async (songId: string): Promise<LeaderboardEntry | null> => {
+  const rows = await db.select({ song: songs, stats: songStats })
+    .from(songStats)
+    .innerJoin(songs, eq(songStats.songId, songs.id))
+    .where(eq(songStats.songId, songId))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+
+  return {
+    songId: row.song.id,
+    title: row.song.title,
+    artists: parseArtists(row.song.artistsJson),
+    wins: row.stats.wins,
+    losses: row.stats.losses,
+    appearances: row.stats.appearances,
+    winRate: row.stats.appearances > 0 ? row.stats.wins / row.stats.appearances : 0,
+  };
 };

@@ -4,6 +4,8 @@ import {
   type BattleResponse,
   type BattleSource,
   type LeaderboardEntry,
+  songStatsSchema,
+  type SongStats,
   type VoteRequest,
 } from '@songbattle/contracts';
 
@@ -45,3 +47,11 @@ export const completeBattleAPI = async (sessionId: string, winnerSongId: string)
 
 export const fetchStatsAPI = async (): Promise<LeaderboardEntry[]> =>
   leaderboardResponseSchema.parse(await requestJson('/api/stats'));
+
+export const fetchSongStatsAPI = async (songId: string): Promise<SongStats | null> => {
+  const response = await fetch(`/api/stats/${songId}`);
+  if (response.status === 404) return null;
+  const body: unknown = await response.json();
+  if (!response.ok) throw new Error(`Statistics request failed with HTTP ${response.status}.`);
+  return songStatsSchema.parse(body);
+};

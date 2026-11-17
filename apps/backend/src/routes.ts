@@ -13,6 +13,7 @@ import {
   createBattleSession,
   getLeaderboard,
   getSongCount,
+  getSongStats,
   recordBattleVote,
 } from './database/repository.js';
 import { SpotifyApiError } from './spotify/client.js';
@@ -112,6 +113,16 @@ apiRouter.post('/sessions/:sessionId/complete', asyncHandler(async (request, res
 
 apiRouter.get('/stats', asyncHandler(async (_request, response) => {
   response.json(await getLeaderboard());
+}));
+
+apiRouter.get('/stats/:songId', asyncHandler(async (request, response) => {
+  const songId = z.string().regex(/^[A-Za-z0-9]{22}$/).parse(request.params.songId);
+  const stats = await getSongStats(songId);
+  if (!stats) {
+    response.status(404).json({ error: { code: 404, message: 'No statistics exist for this song yet.' } });
+    return;
+  }
+  response.json(stats);
 }));
 
 export const formatError = (error: unknown): { status: number; body: unknown } => {

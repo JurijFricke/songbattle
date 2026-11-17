@@ -66,9 +66,20 @@ export const leaderboardEntrySchema = z.object({
   wins: z.number().int().nonnegative(),
   losses: z.number().int().nonnegative(),
   appearances: z.number().int().nonnegative(),
+  winRate: z.number().min(0).max(1),
 });
 
 export const leaderboardResponseSchema = z.array(leaderboardEntrySchema);
+
+export const songStatsSchema = z.object({
+  songId: spotifyIdSchema,
+  title: z.string().min(1),
+  artists: z.array(z.string().min(1)).min(1),
+  wins: z.number().int().nonnegative(),
+  losses: z.number().int().nonnegative(),
+  appearances: z.number().int().nonnegative(),
+  winRate: z.number().min(0).max(1),
+});
 
 export const errorResponseSchema = z.object({
   error: z.object({
@@ -86,4 +97,5 @@ export type BattleResponse = z.infer<typeof battleResponseSchema>;
 export type VoteRequest = z.infer<typeof voteRequestSchema>;
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
 export type LeaderboardEntry = z.infer<typeof leaderboardEntrySchema>;
+export type SongStats = z.infer<typeof songStatsSchema>;
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;

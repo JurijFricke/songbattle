@@ -76,6 +76,112 @@
   margin: 1.5rem auto 0;
 }
 
+.winnerSection {
+  display: grid;
+  gap: 1rem;
+  inline-size: min(100%, 48rem);
+  margin-inline: auto;
+}
+
+.winnerSection > h2 {
+  text-align: center;
+}
+
+.winnerCard,
+.performanceCard {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 3cqi, 1.5rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.winnerCard {
+  container: winner / inline-size;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.winnerArtwork {
+  inline-size: min(100%, 12rem);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: 0.9rem;
+  object-fit: cover;
+}
+
+.winnerDetails {
+  min-inline-size: 0;
+}
+
+.winnerDetails h3,
+.performanceCard h3 {
+  font-size: clamp(1.25rem, 3cqi, 1.75rem);
+}
+
+.winnerArtists {
+  margin-block-start: 0.35rem;
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+}
+
+.songDetails,
+.performanceStats {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+}
+
+.songDetails div,
+.performanceStats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block-end: 0.55rem;
+  border-block-end: 1px solid var(--color-border);
+}
+
+.songDetails dt,
+.performanceStats dt {
+  color: var(--color-text-muted);
+}
+
+.songDetails dd,
+.performanceStats dd {
+  margin: 0;
+  font-weight: 750;
+  text-align: end;
+}
+
+.performanceStats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.performanceStats div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.performanceStats dd {
+  font-size: 1.35rem;
+  text-align: start;
+}
+
+@container winner (inline-size > 34rem) {
+  .winnerCard {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .winnerArtwork {
+    inline-size: 12rem;
+  }
+}
+
 @container battle (inline-size > 45rem) {
   .songBattleContainer {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);

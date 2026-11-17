@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
 import ReactConfetti from 'react-confetti';
-import type { Song } from '@songbattle/contracts';
-import { completeBattleAPI, fetchSongsAPI, saveBattleVoteAPI } from '../services/api';
+import type { Song, SongStats } from '@songbattle/contracts';
+import { completeBattleAPI, fetchSongStatsAPI, fetchSongsAPI, saveBattleVoteAPI } from '../services/api';
 import { useGame } from '../context/GameContext';
 import ProgressBar from './ProgressBar';
 import SpotifyPlayer from './SpotifyPlayer';
+import Accordion from './Accordion';
+import HallOfFame from './HallOfFame';
 import styles from './SongBattle.module.css';
 
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : 'The songs could not be loaded. Please try again.';
+
+const formatDuration = (durationMs: number): string => {
+  const totalSeconds = Math.round(durationMs / 1000);
+  return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`;
+};
 
 const SongBattle = () => {
   const { songCount, source, resetGame } = useGame();
@@ -25,6 +32,8 @@ const SongBattle = () => {
   const [currentWinnerId, setCurrentWinnerId] = useState<string | null>(null);
   const [currentLoserId, setCurrentLoserId] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [winnerStats, setWinnerStats] = useState<SongStats | null>(null);
+  const [isWinnerStatsLoading, setIsWinnerStatsLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +65,23 @@ const SongBattle = () => {
     setShowConfetti(true);
     const timer = window.setTimeout(() => setShowConfetti(false), 10_000);
     return () => window.clearTimeout(timer);
+  }, [winner]);
+
+  useEffect(() => {
+    if (!winner) return;
+    let cancelled = false;
+    setIsWinnerStatsLoading(true);
+    void fetchSongStatsAPI(winner.id)
+      .then((stats) => {
+        if (!cancelled) setWinnerStats(stats);
+      })
+      .catch((statsError: unknown) => {
+        if (!cancelled) setError(errorMessage(statsError));
+      })
+      .finally(() => {
+        if (!cancelled) setIsWinnerStatsLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [winner]);
 
   const handleVote = (selectedSong: Song): void => {
@@ -115,10 +141,41 @@ const SongBattle = () => {
 
   if (winner) {
     return (
-      <section aria-labelledby="winner-heading">
+      <section className={styles.winnerSection} aria-labelledby="winner-heading">
         {showConfetti && <ReactConfetti recycle={false} numberOfPieces={350} />}
         <h2 id="winner-heading">Winner!</h2>
+        <article className={styles.winnerCard}>
+          {winner.album.imageUrl && (
+            <img className={styles.winnerArtwork} src={winner.album.imageUrl} alt={`Album artwork for ${winner.album.name}`} />
+          )}
+          <div className={styles.winnerDetails}>
+            <h3>{winner.title}</h3>
+            <p className={styles.winnerArtists}>{winner.artists.join(', ')}</p>
+            <dl className={styles.songDetails}>
+              <div><dt>Album</dt><dd>{winner.album.name}</dd></div>
+              {winner.releaseDate && <div><dt>Released</dt><dd>{winner.releaseDate}</dd></div>}
+              <div><dt>Duration</dt><dd>{formatDuration(winner.durationMs)}</dd></div>
+              <div><dt>Spotify popularity</dt><dd>{winner.popularity}/100</dd></div>
+            </dl>
+          </div>
+        </article>
         <SpotifyPlayer song={winner} />
+        <section className={styles.performanceCard} aria-labelledby="performance-heading">
+          <h3 id="performance-heading">Tournament performance</h3>
+          {isWinnerStatsLoading && <p role="status">Loading performance statistics...</p>}
+          {!isWinnerStatsLoading && winnerStats && (
+            <dl className={styles.performanceStats}>
+              <div><dt>Wins</dt><dd>{winnerStats.wins}</dd></div>
+              <div><dt>Losses</dt><dd>{winnerStats.losses}</dd></div>
+              <div><dt>Appearances</dt><dd>{winnerStats.appearances}</dd></div>
+              <div><dt>Win rate</dt><dd>{Math.round(winnerStats.winRate * 100)}%</dd></div>
+            </dl>
+          )}
+          {!isWinnerStatsLoading && !winnerStats && <p>No recorded performance statistics yet.</p>}
+        </section>
+        <Accordion title="Hall of Fame">
+          <HallOfFame />
+        </Accordion>
         <button type="button" onClick={resetGame} className={styles.playAgainButton}>Play Again</button>
       </section>
     );
