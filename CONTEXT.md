@@ -188,6 +188,8 @@ packages/contracts
   enforced by `pnpm install --frozen-lockfile` and the audit step.
 - Production dependency audit is clean after upgrading Drizzle ORM to the
   patched `>=0.45.2` line.
+- GitHub Actions CI run `44064223408` passed the complete quality job after
+  route tests were changed to initialize their own migrated database.
 
 ### Verified commands
 
