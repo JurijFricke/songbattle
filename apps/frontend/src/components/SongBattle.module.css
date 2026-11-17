@@ -1,87 +1,96 @@
 .errorMessage {
-  color: white;
-  background-color: #e63946; /* Red background for error */
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  max-width: 600px;
-  margin: 0 auto 20px auto; /* Center and add bottom margin */
+  display: grid;
+  gap: 0.25rem;
+  inline-size: min(100%, 48rem);
+  margin: 0 auto 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 55%, transparent);
+  border-radius: var(--radius-control);
+  background: var(--color-danger-surface);
+  color: var(--color-danger);
 }
 
 .battleLoading {
-  margin-top: 50px;
-  font-size: 1.5rem;
-  color: #555;
+  display: grid;
+  min-block-size: 12rem;
+  place-items: center;
+  color: var(--color-text-muted);
 }
 
 .songBattleContainer {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+  container: battle / inline-size;
 }
 
 .songPanel {
-  width: 450px;
-  position: relative; /* For absolute positioning of effects */
-  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  display: grid;
+  gap: 0.9rem;
+  min-inline-size: 0;
+  padding: clamp(0.75rem, 2cqi, 1.25rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .songPanel.winner {
-  transform: scale(1.03); /* Slightly grow winner */
-  box-shadow: 0 0 15px rgba(29, 185, 84, 0.6);
+  border-color: var(--color-accent);
 }
 
 .songPanel.loser {
-  opacity: 0.5; /* Fade out loser */
-  transform: scale(0.97); /* Slightly shrink loser */
+  opacity: 0.72;
 }
 
 .vsText {
-  font-size: 3rem; /* Make VS. bigger */
-  font-weight: bold;
-  color: #555;
-  align-self: center; /* Align vertically in flex container */
+  justify-self: center;
+  color: var(--color-text-muted);
+  font-size: clamp(1.25rem, 5cqi, 3rem);
+  font-weight: 900;
 }
 
-.voteButton {
-  margin-top: 15px;
-  padding: 15px 40px; /* Bigger padding */
-  background-color: #1DB954; /* Spotify green */
-  color: white;
-  border: none;
-  border-radius: 30px; /* Very rounded */
-  font-size: 1.5rem; /* Bigger font size */
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  width: 100%; /* Make button span full width of panel */
+.voteButton,
+.playAgainButton {
+  min-block-size: 3.25rem;
+  padding-inline: 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-weight: 850;
 }
 
-.voteButton:hover {
-  background-color: #1AA34A; /* Slightly darker green */
-  transform: translateY(-2px); /* Slight lift effect */
-  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-}
-
-.voteButton:active {
-  background-color: #178F42; /* Even darker green */
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+.voteButton:hover:not(:disabled),
+.playAgainButton:hover:not(:disabled) {
+  background: var(--color-accent-strong);
 }
 
 .votedButton {
-  background-color: #178F42; /* Darker green when voted */
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(29, 185, 84, 0.7); /* Change the glow */
-  animation: none; /* Disable previous glow animation for voted button */
+  background: var(--color-accent-strong);
 }
 
 .playAgainButton {
-  margin-top: 30px;
-  /* default styles for start-game-button (reused) */
+  display: block;
+  margin: 1.5rem auto 0;
+}
+
+@container battle (inline-size > 45rem) {
+  .songBattleContainer {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .songPanel,
+  .voteButton,
+  .playAgainButton {
+    transition: transform 180ms ease, opacity 180ms ease, background-color 180ms ease, border-color 180ms ease;
+  }
+
+  .voteButton:hover:not(:disabled),
+  .playAgainButton:hover:not(:disabled) {
+    transform: translateY(-0.15rem);
+  }
 }

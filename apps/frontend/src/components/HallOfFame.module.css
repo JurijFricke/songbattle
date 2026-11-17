@@ -1,41 +1,42 @@
 .container {
-    margin-top: 40px;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    padding: 1rem;
+    color: var(--color-text);
 }
 
 .leaderboardList {
     list-style: none;
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
     padding: 0;
 }
 
 .leaderboardList li {
     display: flex;
     align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding-block: 0.75rem;
+    border-block-end: 1px solid var(--color-border);
 }
 
 .leaderboardList li:last-child {
-    border-bottom: none;
+    border-block-end: 0;
 }
 
 .rank {
     font-size: 1.2rem;
     font-weight: bold;
-    color: #888;
-    width: 40px;
+    color: var(--color-text-muted);
+    min-inline-size: 2rem;
 }
 
 .songInfo {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    min-inline-size: 0;
     text-align: left;
 }
 
@@ -45,11 +46,11 @@
 
 .artist {
     font-size: 0.9rem;
-    color: #555;
+    color: var(--color-text-muted);
 }
 
 .wins {
     font-size: 1.1rem;
     font-weight: bold;
-    color: #1DB954; /* Spotify green */
+    color: var(--color-accent-strong);
 }

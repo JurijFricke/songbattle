@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { decadeSchema, type BattleSource } from '@songbattle/contracts';
-import styles from './StartMenu.module.css';
-import { useGame } from '../context/GameContext'; // Import the custom hook
+import { useGame } from '../context/GameContext';
+import Accordion from './Accordion';
 import HallOfFame from './HallOfFame';
-import Accordion from './Accordion'; // Import the new component
+import styles from './StartMenu.module.css';
+
+const bracketSizes = [16, 32, 64, 128, 256] as const;
 
 const StartMenu = () => {
   const { startGame } = useGame();
-
-  const [songCount, setSongCount] = useState(16);
+  const [songCount, setSongCount] = useState<(typeof bracketSizes)[number]>(16);
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [decade, setDecade] = useState('any');
   const [genre, setGenre] = useState('any');
@@ -20,84 +21,112 @@ const StartMenu = () => {
     return { type: 'random' };
   };
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    startGame(songCount, buildSource());
+  };
+
+  const hasPlaylist = playlistUrl.trim().length > 0;
+  const hasDecade = decade !== 'any';
+
   return (
-    <div>
-      <h2>Start Menu</h2>
-      <div className={styles.startMenuSection}>
-        <label htmlFor="song-count">Select number of songs:</label>
-        <select
-          id="song-count"
-          value={songCount}
-          onChange={(e) => setSongCount(parseInt(e.target.value))}
-          className={styles.customSelect}
-        >
-          <option value="16">16</option>
-          <option value="32">32</option>
-          <option value="64">64</option>
-          <option value="128">128</option>
-          <option value="256">256</option>
-        </select>
-      </div>
+    <div className={styles.menuLayout}>
+      <section className={styles.startCard} aria-labelledby="start-heading">
+        <p className={styles.cardEyebrow}>Build your bracket</p>
+        <h2 id="start-heading">Choose your battle</h2>
+        <p className={styles.intro}>Pick a pool, then listen to both contenders before you vote.</p>
 
-      <div className={styles.startMenuSection}>
-        <label htmlFor="decade-select">Select Decade (optional):</label>
-        <select
-          id="decade-select"
-          value={decade}
-          onChange={(e) => setDecade(e.target.value)}
-          className={styles.customSelect}
-           disabled={Boolean(playlistUrl)}
-        >
-          <option value="any">Any</option>
-          <option value="2020s">2020s</option>
-          <option value="2010s">2010s</option>
-          <option value="2000s">2000s</option>
-          <option value="1990s">1990s</option>
-          <option value="1980s">1980s</option>
-          <option value="1970s">1970s</option>
-        </select>
-      </div>
+        <form className={styles.form} onSubmit={handleSubmit} aria-labelledby="start-heading">
+          <fieldset className={styles.fieldset}>
+            <legend>Bracket size</legend>
+            <label className={styles.field} htmlFor="song-count">
+              <span>Number of songs</span>
+              <select
+                id="song-count"
+                name="songCount"
+                value={songCount}
+                onChange={(event) => setSongCount(Number(event.target.value) as (typeof bracketSizes)[number])}
+                className={styles.control}
+              >
+                {bracketSizes.map((size) => <option key={size} value={size}>{size}</option>)}
+              </select>
+            </label>
+          </fieldset>
 
-      <div className={styles.startMenuSection}>
-        <label htmlFor="genre-select">Select genre (optional):</label>
-        <select
-          id="genre-select"
-          value={genre}
-          onChange={(event) => setGenre(event.target.value)}
-          className={styles.customSelect}
-          disabled={Boolean(playlistUrl) || decade !== 'any'}
-        >
-          <option value="any">Any</option>
-          <option value="pop">Pop</option>
-          <option value="rock">Rock</option>
-          <option value="indie">Indie</option>
-          <option value="hip-hop">Hip-hop</option>
-          <option value="r-n-b">R&amp;B</option>
-          <option value="alternative">Alternative</option>
-          <option value="dance">Dance</option>
-          <option value="metal">Metal</option>
-          <option value="german">German</option>
-        </select>
-      </div>
+          <fieldset className={styles.fieldset}>
+            <legend>Song source</legend>
+            <label className={styles.field} htmlFor="playlist-url">
+              <span>Spotify playlist URL <small>(optional)</small></span>
+              <input
+                id="playlist-url"
+                name="playlistUrl"
+                type="url"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                value={playlistUrl}
+                onChange={(event) => setPlaylistUrl(event.target.value)}
+                placeholder="https://open.spotify.com/playlist/..."
+                className={styles.control}
+                aria-describedby="playlist-help"
+              />
+            </label>
+            <p id="playlist-help" className={styles.helpText}>Use a playlist to battle tracks from a collection you already love.</p>
 
-      <div className={styles.startMenuSection}>
-        <label htmlFor="playlist-url">Or paste a Spotify Playlist URL (optional):</label>
-        <input
-          key="playlist-url-input"
-          id="playlist-url"
-          type="text"
-          value={playlistUrl}
-          onChange={(e) => setPlaylistUrl(e.target.value)}
-          placeholder="e.g., https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
-          className={styles.customInput}
-        />
-      </div>
-       <button onClick={() => startGame(songCount, buildSource())} className={styles.startGameButton}>
-        Start Game
-      </button>
-      <Accordion title="Hall of Fame - Top 10">
-        <HallOfFame />
-      </Accordion>
+            <label className={styles.field} htmlFor="decade-select">
+              <span>Decade <small>(optional)</small></span>
+              <select
+                id="decade-select"
+                name="decade"
+                value={decade}
+                onChange={(event) => setDecade(event.target.value)}
+                className={styles.control}
+                disabled={hasPlaylist}
+              >
+                <option value="any">Any decade</option>
+                <option value="2020s">2020s</option>
+                <option value="2010s">2010s</option>
+                <option value="2000s">2000s</option>
+                <option value="1990s">1990s</option>
+                <option value="1980s">1980s</option>
+                <option value="1970s">1970s</option>
+              </select>
+            </label>
+
+            <label className={styles.field} htmlFor="genre-select">
+              <span>Genre <small>(optional)</small></span>
+              <select
+                id="genre-select"
+                name="genre"
+                value={genre}
+                onChange={(event) => setGenre(event.target.value)}
+                className={styles.control}
+                disabled={hasPlaylist || hasDecade}
+              >
+                <option value="any">Any genre</option>
+                <option value="pop">Pop</option>
+                <option value="rock">Rock</option>
+                <option value="indie">Indie</option>
+                <option value="hip-hop">Hip-hop</option>
+                <option value="r-n-b">R&amp;B</option>
+                <option value="alternative">Alternative</option>
+                <option value="dance">Dance</option>
+                <option value="metal">Metal</option>
+                <option value="german">German</option>
+              </select>
+            </label>
+          </fieldset>
+
+          <button type="submit" className={styles.startGameButton}>Start battle</button>
+        </form>
+      </section>
+
+      <aside className={styles.hallOfFame} aria-label="Hall of Fame">
+        <Accordion title="Hall of Fame">
+          <HallOfFame />
+        </Accordion>
+      </aside>
     </div>
   );
 };

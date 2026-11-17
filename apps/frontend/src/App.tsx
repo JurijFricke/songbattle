@@ -11,14 +11,21 @@ const AppContent = () => {
 
   return (
     <>
-      <h1>Song Battle</h1>
-      {gameStarted ? (
-        <Suspense fallback={<div>Loading Game...</div>}>
-          <SongBattle />
-        </Suspense>
-      ) : (
-        <StartMenu />
-      )}
+      <a className="skipLink" href="#main-content">Skip to main content</a>
+      <header className={styles.appHeader}>
+        <p className={styles.eyebrow}>Spotify-powered tournament</p>
+        <h1>Song Battle</h1>
+        <p className={styles.subtitle}>Listen first. Choose carefully. Crown a champion.</p>
+      </header>
+      <main id="main-content" className={styles.mainContent} tabIndex={-1}>
+        {gameStarted ? (
+          <Suspense fallback={<div role="status">Loading game...</div>}>
+            <SongBattle />
+          </Suspense>
+        ) : (
+          <StartMenu />
+        )}
+      </main>
     </>
   );
 };

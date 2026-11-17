@@ -1,21 +1,17 @@
-import React from 'react';
-
 interface ProgressBarProps {
   current: number;
   total: number;
   label?: string;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ current, total, label }) => {
-  const percentage = total === 0 ? 0 : (current / total) * 100;
+const ProgressBar = ({ current, total, label }: ProgressBarProps) => {
+  const percentage = total === 0 ? 0 : Math.min(100, (current / total) * 100);
 
   return (
-    <div className="progress-bar-container">
-      {label && <div className="progress-bar-label">{label}</div>}
-      <div className="progress-bar-track">
-        <div className="progress-bar-fill" style={{ width: `${percentage}%` }}></div>
-      </div>
-      <div className="progress-bar-text">{current} / {total}</div>
+    <div className="progressBar" aria-label={label}>
+      {label && <div className="progressBarLabel">{label}</div>}
+      <progress className="progressBarTrack" value={current} max={total} />
+      <div className="progressBarText">{current} / {total}</div>
     </div>
   );
 };

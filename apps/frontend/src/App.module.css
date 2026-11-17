@@ -1,5 +1,39 @@
 .appContainer {
+  min-block-size: 100dvb;
+}
+
+.appHeader,
+.mainContent {
+  inline-size: min(100% - 2rem, 76rem);
+  margin-inline: auto;
+}
+
+.appHeader {
+  display: grid;
+  gap: 0.75rem;
+  padding-block: clamp(2.5rem, 8vw, 6rem) 2rem;
   text-align: center;
-  padding: 10px;
-  background-color: #f0f0f0; /* Light grey background */
+}
+
+.eyebrow,
+.cardEyebrow {
+  color: var(--color-accent-strong);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.appHeader h1 {
+  font-size: clamp(2.75rem, 8vw, 5.5rem);
+  letter-spacing: -0.06em;
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+.mainContent {
+  padding-block-end: 4rem;
 }

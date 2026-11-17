@@ -1,79 +1,123 @@
-.startMenuSection {
-  margin-bottom: 20px;
-  text-align: center; /* Center content within each section */
+.menuLayout {
+  display: grid;
+  gap: 1.5rem;
+  container: menu / inline-size;
 }
 
-.startMenuSection label {
-  display: block; /* Ensure label takes full width */
-  margin-bottom: 8px; /* Space between label and control */
-  font-size: 1.1rem;
-  color: #333;
+.startCard,
+.hallOfFame :global(.accordion) {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
-.customSelect,
-.customInput {
-  width: 100%;
-  max-width: 300px; /* Limit width for better appearance */
-  padding: 10px 15px;
-  margin-bottom: 10px; /* Space below control */
-  border: 1px solid #ccc;
-  border-radius: 25px; /* More rounded corners */
-  background-color: #fff;
-  font-size: 1.1rem; /* Slightly larger font */
-  font-weight: bold; /* Make selected option stand out */
-  color: #333;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+.startCard {
+  inline-size: min(100%, 42rem);
+  margin-inline: auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
 }
 
-.customSelect {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%00-13.6-6.4H18.6c-5%200-9.3%201.8-13.6%206.4-4.2%204.6-6.4%2010.5-6.4%2016.4%200%205.9%202.2%2011.8%206.4%2016.4l127.9%20127.9c4.2%204.2%2010.2%206.4%2016.4%206.4s12.2-2.2%2016.4-6.4L287%20102.2c4.2-4.6%206.4-10.5%206.4-16.4%200-5.9-2.2-11.8-6.4-16.4z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 1em;
-  padding-right: 40px; /* Make space for the arrow */
-  text-align-last: center; /* Center the selected option text */
+.startCard h2 {
+  margin-block-start: 0.35rem;
+  font-size: clamp(1.75rem, 4cqi, 2.5rem);
 }
 
-.customInput {
-  /* ... (existing styles) ... */
+.intro,
+.helpText {
+  color: var(--color-text-muted);
 }
 
+.intro {
+  margin-block-start: 0.75rem;
+}
 
-.customSelect:focus,
-.customInput:focus {
-  border-color: #1DB954; /* Spotify green */
-  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.2); /* Green glow */
-  outline: none;
+.form {
+  display: grid;
+  gap: 1.5rem;
+  margin-block-start: 2rem;
+}
+
+.fieldset {
+  display: grid;
+  gap: 1rem;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fieldset legend {
+  margin-block-end: 0.25rem;
+  font-weight: 800;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--color-text);
+  font-weight: 650;
+}
+
+.field small {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.control {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 3rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.control:disabled {
+  opacity: 0.6;
+}
+
+.control:user-invalid {
+  border-color: var(--color-danger);
+}
+
+.helpText {
+  margin-block-start: -0.55rem;
+  font-size: 0.88rem;
 }
 
 .startGameButton {
-  margin-top: 30px; /* More space above the button */
-  padding: 12px 30px;
-  background-color: #1DB954; /* Spotify green */
-  color: white;
-  border: none;
-  border-radius: 30px; /* Very rounded */
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  min-block-size: 3.25rem;
+  padding-inline: 1.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
-.startGameButton:hover {
-  background-color: #1AA34A; /* Slightly darker green */
-  transform: translateY(-2px); /* Slight lift effect */
-  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+.startGameButton:hover:not(:disabled) {
+  background: var(--color-accent-strong);
 }
 
-.startGameButton:active {
-  background-color: #178F42; /* Even darker green */
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+.hallOfFame {
+  inline-size: min(100%, 52rem);
+  margin-inline: auto;
+}
+
+.hallOfFame :global(.accordion) {
+  margin: 0;
+}
+
+@container menu (inline-size > 54rem) {
+  .menuLayout {
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.8fr);
+    align-items: start;
+  }
+
+  .hallOfFame {
+    inline-size: 100%;
+  }
 }
