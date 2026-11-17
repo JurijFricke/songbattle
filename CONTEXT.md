@@ -183,6 +183,9 @@ packages/contracts
 - Active Netlify configuration removed; old config remains in archive sources.
 - Root ESLint flat configuration, Prettier enforcement, contracts typechecking,
   and GitHub Actions CI are active.
+- Generated `pnpm-lock.yaml` is intentionally excluded from Prettier checks to
+  avoid version-dependent cosmetic rewrites; dependency integrity remains
+  enforced by `pnpm install --frozen-lockfile` and the audit step.
 - Production dependency audit is clean after upgrading Drizzle ORM to the
   patched `>=0.45.2` line.
 
@@ -284,6 +287,8 @@ staging.example-domain → staging
 ## Latest commits on active dev
 
 ```text
+a86e9e9 ci: ignore generated pnpm lock formatting
+f6b86a7 ci: add production dependency audit
 d4bf31e chore: enforce repository quality gates
 0468180 feat(backend): harden Spotify cache and rate limits
 1937a18 feat(backend): harden battle session persistence
