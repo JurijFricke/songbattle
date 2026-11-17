@@ -1,0 +1,9 @@
+node_modules
+dist
+build
+coverage
+.git
+*.db
+*.db-shm
+*.db-wal
+package-lock.json
