@@ -20,5 +20,10 @@ export default defineConfig(({ mode }) => {
       target: 'es2022',
       sourcemap: true,
     },
+    test: {
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.ts',
+      include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    },
   };
 });
