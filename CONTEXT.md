@@ -201,6 +201,15 @@ packages/contracts
   specifiers, `infra/README.md`, and `production.env.example` now use
   `%h/projects/songbattle/...`. Runtime state paths on the VM are
   `~/projects/songbattle/{data,caddy-data,caddy-config,production.env}`.
+- Relocation verified on the VM: checkout fast-forwarded to `ad58b33`, the
+  Quadlet units were copied to `~/.config/containers/systemd/` and
+  `systemctl --user daemon-reload` expanded `%h/projects/songbattle/...`
+  correctly in both generated units. No stale `/home/ubuntu/songbattle`
+  reference exists in `~/.config`, `~/.bashrc`, `~/.profile`, crontab, or
+  `/etc/systemd/system`. No unit was enabled or started.
+- Open gap: images on the VM are tagged `localhost/songbattle-{api,web}:dev`,
+  while the Quadlet units reference `:latest`. Tag (or pin) before the first
+  service start.
 
 ### Verified commands
 
