@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { fetchStatsAPI, LeaderboardEntry } from '../services/api';
+import { useState, useEffect } from 'react';
+import type { LeaderboardEntry } from '@songbattle/contracts';
+import { fetchStatsAPI } from '../services/api';
 import styles from './HallOfFame.module.css';
 
 const HallOfFame = () => {
@@ -38,7 +39,7 @@ const HallOfFame = () => {
                         <span className={styles.rank}>{index + 1}.</span>
                         <div className={styles.songInfo}>
                             <span className={styles.title}>{entry.title}</span>
-                            <span className={styles.artist}>{entry.artist}</span>
+                        <span className={styles.artist}>{entry.artists.join(', ')}</span>
                         </div>
                         <span className={styles.wins}>{entry.wins} Wins</span>
                     </li>

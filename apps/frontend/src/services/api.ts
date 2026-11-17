@@ -1,64 +1,47 @@
-import { Song } from '../types/Song';
+import {
+  battleResponseSchema,
+  leaderboardResponseSchema,
+  type BattleResponse,
+  type BattleSource,
+  type LeaderboardEntry,
+  type VoteRequest,
+} from '@songbattle/contracts';
 
-interface ApiResponse {
-  songs: Song[];
-  warning?: string;
-}
-
-export const fetchSongsAPI = async (count: number, playlistUrl?: string, decade?: string): Promise<ApiResponse> => {
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://songbattle-backend.onrender.com';
-  let url = `${backendUrl}/api/songs?count=${count}`;
-
-  if (playlistUrl) {
-    url += `&playlistUrl=${encodeURIComponent(playlistUrl)}`;
-  } else if (decade) {
-    url += `&decade=${decade}`;
-  }
-
-  const response = await fetch(url);
-
+const requestJson = async (input: RequestInfo | URL, init?: RequestInit): Promise<unknown> => {
+  const response = await fetch(input, init);
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    const message = typeof body === 'object' && body !== null && 'error' in body
+      ? JSON.stringify(body.error)
+      : `Request failed with HTTP ${response.status}.`;
+    throw new Error(message);
   }
-
-  const data = await response.json();
-  return data;
+  return body;
 };
 
-export const saveBattleResultAPI = async (winnerSongId: string, loserSongId: string): Promise<void> => {
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://songbattle-backend.onrender.com';
-  try {
-    await fetch(`${backendUrl}/api/result`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ winnerSongId, loserSongId }),
-    });
-  } catch (error) {
-    console.error("Failed to save battle result:", error);
-    // Don't block the user for this, just log the error
-  }
+export const fetchSongsAPI = async (count: number, source: BattleSource): Promise<BattleResponse> => {
+  const params = new URLSearchParams({ count: String(count) });
+  if (source.type === 'playlist') params.set('playlistUrl', source.playlistUrl);
+  if (source.type === 'decade') params.set('decade', source.decade);
+  if (source.type === 'genre') params.set('genre', source.genre);
+  return battleResponseSchema.parse(await requestJson(`/api/songs?${params}`));
 };
 
-export interface LeaderboardEntry {
-  songId: string;
-  wins: number;
-  title: string;
-  artist: string;
-}
-
-export const fetchStatsAPI = async (): Promise<LeaderboardEntry[]> => {
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://songbattle-backend.onrender.com';
-  try {
-    const response = await fetch(`${backendUrl}/api/stats`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch stats');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Failed to fetch stats:", error);
-    return []; // Return empty array on error
-  }
+export const saveBattleVoteAPI = async (vote: VoteRequest): Promise<void> => {
+  await requestJson('/api/votes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(vote),
+  });
 };
+
+export const completeBattleAPI = async (sessionId: string, winnerSongId: string): Promise<void> => {
+  await requestJson(`/api/sessions/${sessionId}/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ winnerSongId }),
+  });
+};
+
+export const fetchStatsAPI = async (): Promise<LeaderboardEntry[]> =>
+  leaderboardResponseSchema.parse(await requestJson('/api/stats'));

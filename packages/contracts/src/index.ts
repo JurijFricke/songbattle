@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const spotifyIdSchema = z.string().regex(/^[A-Za-z0-9]{22}$/, 'Invalid Spotify ID');
+export const decadeSchema = z.enum(['1970s', '1980s', '1990s', '2000s', '2010s', '2020s']);
 
 export const spotifyEmbedSchema = z.object({
   provider: z.literal('spotify'),
@@ -26,7 +27,7 @@ export const songSchema = z.object({
 
 export const sourceSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('random') }),
-  z.object({ type: z.literal('decade'), decade: z.enum(['1970s', '1980s', '1990s', '2000s', '2010s', '2020s']) }),
+  z.object({ type: z.literal('decade'), decade: decadeSchema }),
   z.object({ type: z.literal('genre'), genre: z.string().trim().min(1).max(64) }),
   z.object({ type: z.literal('playlist'), playlistUrl: z.url() }),
 ]);
@@ -58,6 +59,17 @@ export const healthResponseSchema = z.object({
   spotify: z.object({ configured: z.boolean(), authenticated: z.boolean() }),
 });
 
+export const leaderboardEntrySchema = z.object({
+  songId: spotifyIdSchema,
+  title: z.string().min(1),
+  artists: z.array(z.string().min(1)).min(1),
+  wins: z.number().int().nonnegative(),
+  losses: z.number().int().nonnegative(),
+  appearances: z.number().int().nonnegative(),
+});
+
+export const leaderboardResponseSchema = z.array(leaderboardEntrySchema);
+
 export const errorResponseSchema = z.object({
   error: z.object({
     code: z.number().int(),
@@ -73,4 +85,5 @@ export type BattleRequest = z.infer<typeof battleRequestSchema>;
 export type BattleResponse = z.infer<typeof battleResponseSchema>;
 export type VoteRequest = z.infer<typeof voteRequestSchema>;
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
+export type LeaderboardEntry = z.infer<typeof leaderboardEntrySchema>;
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;

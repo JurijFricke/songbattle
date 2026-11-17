@@ -1,6 +1,1 @@
-export interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  embed: string;
-}
+export type { Song } from '@songbattle/contracts';

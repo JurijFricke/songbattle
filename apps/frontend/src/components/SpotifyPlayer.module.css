@@ -1,0 +1,8 @@
+.player {
+  display: block;
+  width: 100%;
+  min-height: 152px;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #182b55;
+}

@@ -1,12 +1,12 @@
-import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
+import { createContext, useState, useContext, useCallback, type ReactNode } from 'react';
+import type { BattleSource } from '@songbattle/contracts';
 
 // Define the shape of the context state
 interface GameState {
   gameStarted: boolean;
   songCount: number;
-  playlistUrl?: string;
-  decade?: string;
-  startGame: (songCount: number, playlistUrl?: string, decade?: string) => void;
+  source: BattleSource | null;
+  startGame: (songCount: number, source: BattleSource) => void;
   resetGame: () => void;
 }
 
@@ -21,13 +21,11 @@ interface GameProviderProps {
 export const GameProvider = ({ children }: GameProviderProps) => {
   const [gameStarted, setGameStarted] = useState(false);
   const [songCount, setSongCount] = useState(16);
-  const [playlistUrl, setPlaylistUrl] = useState<string | undefined>(undefined);
-  const [decade, setDecade] = useState<string | undefined>(undefined);
+  const [source, setSource] = useState<BattleSource | null>(null);
 
-  const startGame = useCallback((count: number, url?: string, dec?: string) => {
+  const startGame = useCallback((count: number, nextSource: BattleSource) => {
     setSongCount(count);
-    setPlaylistUrl(url);
-    setDecade(dec === 'any' ? undefined : dec);
+    setSource(nextSource);
     setGameStarted(true);
   }, []); // Dependencies are setters, which are stable
 
@@ -39,8 +37,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
   const value = {
     gameStarted,
     songCount,
-    playlistUrl,
-    decade,
+    source,
     startGame,
     resetGame,
   };
