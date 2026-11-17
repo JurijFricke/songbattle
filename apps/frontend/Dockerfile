@@ -12,7 +12,7 @@ COPY apps/frontend apps/frontend
 COPY packages/contracts packages/contracts
 RUN pnpm --filter @songbattle/frontend build
 
-FROM caddy:2.10-alpine AS runtime
+FROM docker.io/library/caddy:2.10-alpine AS runtime
 
 COPY --from=build /workspace/apps/frontend/dist /srv
 COPY infra/caddy/Caddyfile /etc/caddy/Caddyfile
