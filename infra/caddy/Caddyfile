@@ -1,0 +1,13 @@
+{$SONGBATTLE_DOMAIN} {
+  encode zstd gzip
+
+  handle /api/* {
+    reverse_proxy songbattle-api:3001
+  }
+
+  handle {
+    root * /srv
+    try_files {path} /index.html
+    file_server
+  }
+}

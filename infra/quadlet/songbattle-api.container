@@ -1,0 +1,29 @@
+[Unit]
+Description=SongBattle API
+Requires=songbattle-network.service
+After=songbattle-network.service
+
+[Container]
+Image=localhost/songbattle-api:latest
+ContainerName=songbattle-api
+Network=songbattle.network
+EnvironmentFile=%h/songbattle/production.env
+Environment=NODE_ENV=production
+Environment=PORT=3001
+Environment=DATABASE_URL=file:/data/songbattle.db
+Volume=%h/songbattle/data:/data
+ReadOnly=false
+NoNewPrivileges=true
+DropCapability=ALL
+HealthCmd=node -e "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+HealthInterval=30s
+HealthTimeout=5s
+HealthRetries=3
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

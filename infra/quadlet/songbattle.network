@@ -1,0 +1,8 @@
+[Unit]
+Description=SongBattle Podman network
+
+[Network]
+NetworkName=songbattle
+
+[Install]
+WantedBy=default.target

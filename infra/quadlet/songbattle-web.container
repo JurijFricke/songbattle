@@ -1,0 +1,25 @@
+[Unit]
+Description=SongBattle web and Caddy reverse proxy
+Requires=songbattle-network.service songbattle-api.service
+After=songbattle-network.service songbattle-api.service
+
+[Container]
+Image=localhost/songbattle-web:latest
+ContainerName=songbattle-web
+Network=songbattle.network
+EnvironmentFile=%h/songbattle/production.env
+PublishPort=80:80
+PublishPort=443:443
+Volume=%h/songbattle/caddy-data:/data
+Volume=%h/songbattle/caddy-config:/config
+ReadOnly=true
+NoNewPrivileges=true
+DropCapability=ALL
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target
