@@ -1,11 +1,14 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 const spotifyImageSchema = z.object({ url: z.url() });
 
 export const spotifyTrackSchema = z.object({
-  id: z.string().regex(/^[A-Za-z0-9]{22}$/).nullable(),
+  id: z
+    .string()
+    .regex(/^[A-Za-z0-9]{22}$/)
+    .nullable(),
   name: z.string(),
-  type: z.literal('track'),
+  type: z.literal("track"),
   is_local: z.boolean().optional(),
   duration_ms: z.number().int().nonnegative(),
   popularity: z.number().int().min(0).max(100),
@@ -25,10 +28,12 @@ export const spotifySearchResponseSchema = z.object({
 });
 
 export const spotifyPlaylistTracksResponseSchema = z.object({
-  items: z.array(z.object({
-    item: spotifyTrackSchema.nullable().optional(),
-    track: spotifyTrackSchema.nullable().optional(),
-  })),
+  items: z.array(
+    z.object({
+      item: spotifyTrackSchema.nullable().optional(),
+      track: spotifyTrackSchema.nullable().optional(),
+    }),
+  ),
   next: z.url().nullable(),
   total: z.number().int().nonnegative(),
 });
@@ -41,4 +46,6 @@ export const spotifyTokenResponseSchema = z.object({
 
 export type SpotifyTrack = z.infer<typeof spotifyTrackSchema>;
 export type SpotifySearchResponse = z.infer<typeof spotifySearchResponseSchema>;
-export type SpotifyPlaylistTracksResponse = z.infer<typeof spotifyPlaylistTracksResponseSchema>;
+export type SpotifyPlaylistTracksResponse = z.infer<
+  typeof spotifyPlaylistTracksResponseSchema
+>;

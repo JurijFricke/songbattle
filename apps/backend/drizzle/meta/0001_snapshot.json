@@ -67,9 +67,7 @@
       "indexes": {
         "battle_sessions_started_at_idx": {
           "name": "battle_sessions_started_at_idx",
-          "columns": [
-            "started_at"
-          ],
+          "columns": ["started_at"],
           "isUnique": false
         }
       },
@@ -127,23 +125,17 @@
       "indexes": {
         "battle_votes_session_idx": {
           "name": "battle_votes_session_idx",
-          "columns": [
-            "session_id"
-          ],
+          "columns": ["session_id"],
           "isUnique": false
         },
         "battle_votes_winner_idx": {
           "name": "battle_votes_winner_idx",
-          "columns": [
-            "winner_song_id"
-          ],
+          "columns": ["winner_song_id"],
           "isUnique": false
         },
         "battle_votes_loser_idx": {
           "name": "battle_votes_loser_idx",
-          "columns": [
-            "loser_song_id"
-          ],
+          "columns": ["loser_song_id"],
           "isUnique": false
         }
       },
@@ -225,9 +217,7 @@
       "indexes": {
         "playlist_cache_expiry_idx": {
           "name": "playlist_cache_expiry_idx",
-          "columns": [
-            "expires_at"
-          ],
+          "columns": ["expires_at"],
           "isUnique": false
         }
       },
@@ -382,16 +372,12 @@
       "indexes": {
         "songs_release_date_idx": {
           "name": "songs_release_date_idx",
-          "columns": [
-            "release_date"
-          ],
+          "columns": ["release_date"],
           "isUnique": false
         },
         "songs_popularity_idx": {
           "name": "songs_popularity_idx",
-          "columns": [
-            "popularity"
-          ],
+          "columns": ["popularity"],
           "isUnique": false
         }
       },
