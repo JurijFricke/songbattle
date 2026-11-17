@@ -1,1 +1,1 @@
-export type { Song } from '@songbattle/contracts';
+export type { Song } from "@songbattle/contracts";

@@ -1,20 +1,27 @@
-import { useEffect, useState } from 'react';
-import ReactConfetti from 'react-confetti';
-import type { Song, SongStats } from '@songbattle/contracts';
-import { completeBattleAPI, fetchSongStatsAPI, fetchSongsAPI, saveBattleVoteAPI } from '../services/api';
-import { useGame } from '../context/GameContext';
-import ProgressBar from './ProgressBar';
-import SpotifyPlayer from './SpotifyPlayer';
-import Accordion from './Accordion';
-import HallOfFame from './HallOfFame';
-import styles from './SongBattle.module.css';
+import { useEffect, useState } from "react";
+import ReactConfetti from "react-confetti";
+import type { Song, SongStats } from "@songbattle/contracts";
+import {
+  completeBattleAPI,
+  fetchSongStatsAPI,
+  fetchSongsAPI,
+  saveBattleVoteAPI,
+} from "../services/api";
+import { useGame } from "../context/useGame";
+import ProgressBar from "./ProgressBar";
+import SpotifyPlayer from "./SpotifyPlayer";
+import Accordion from "./Accordion";
+import HallOfFame from "./HallOfFame";
+import styles from "./SongBattle.module.css";
 
 const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : 'The songs could not be loaded. Please try again.';
+  error instanceof Error
+    ? error.message
+    : "The songs could not be loaded. Please try again.";
 
 const formatDuration = (durationMs: number): string => {
   const totalSeconds = Math.round(durationMs / 1000);
-  return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`;
+  return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
 };
 
 const SongBattle = () => {
@@ -28,10 +35,12 @@ const SongBattle = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isBattleLoading, setIsBattleLoading] = useState(false);
-  const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(null);
+  const [lastClickedButtonId, setLastClickedButtonId] = useState<string | null>(
+    null,
+  );
   const [currentWinnerId, setCurrentWinnerId] = useState<string | null>(null);
   const [currentLoserId, setCurrentLoserId] = useState<string | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [winnerConfettiEnded, setWinnerConfettiEnded] = useState(false);
   const [winnerStats, setWinnerStats] = useState<SongStats | null>(null);
   const [isWinnerStatsLoading, setIsWinnerStatsLoading] = useState(false);
 
@@ -39,7 +48,7 @@ const SongBattle = () => {
     let cancelled = false;
     const loadSongs = async (): Promise<void> => {
       if (!source) {
-        setError('No battle source was selected.');
+        setError("No battle source was selected.");
         return;
       }
       setError(null);
@@ -57,20 +66,20 @@ const SongBattle = () => {
       }
     };
     void loadSongs();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [songCount, source]);
 
   useEffect(() => {
     if (!winner) return;
-    setShowConfetti(true);
-    const timer = window.setTimeout(() => setShowConfetti(false), 10_000);
+    const timer = window.setTimeout(() => setWinnerConfettiEnded(true), 10_000);
     return () => window.clearTimeout(timer);
   }, [winner]);
 
   useEffect(() => {
     if (!winner) return;
     let cancelled = false;
-    setIsWinnerStatsLoading(true);
     void fetchSongStatsAPI(winner.id)
       .then((stats) => {
         if (!cancelled) setWinnerStats(stats);
@@ -81,7 +90,9 @@ const SongBattle = () => {
       .finally(() => {
         if (!cancelled) setIsWinnerStatsLoading(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [winner]);
 
   const handleVote = (selectedSong: Song): void => {
@@ -128,61 +139,117 @@ const SongBattle = () => {
       setRound(updatedRound);
       setNextContenders(updatedNextContenders);
       setCurrentBattleIndex(updatedCurrentBattleIndex);
+      if (nextGameWinner) {
+        setWinnerConfettiEnded(false);
+        setIsWinnerStatsLoading(true);
+      }
       setWinner(nextGameWinner);
       setIsBattleLoading(false);
 
       if (nextGameWinner && sessionId) {
-        void completeBattleAPI(sessionId, nextGameWinner.id).catch((completeError: unknown) => {
-          setError(errorMessage(completeError));
-        });
+        void completeBattleAPI(sessionId, nextGameWinner.id).catch(
+          (completeError: unknown) => {
+            setError(errorMessage(completeError));
+          },
+        );
       }
     }, 300);
   };
 
   if (winner) {
     return (
-      <section className={styles.winnerSection} aria-labelledby="winner-heading">
-        {showConfetti && <ReactConfetti recycle={false} numberOfPieces={350} />}
+      <section
+        className={styles.winnerSection}
+        aria-labelledby="winner-heading"
+      >
+        {!winnerConfettiEnded && (
+          <ReactConfetti recycle={false} numberOfPieces={350} />
+        )}
         <h2 id="winner-heading">Winner!</h2>
         <article className={styles.winnerCard}>
           {winner.album.imageUrl && (
-            <img className={styles.winnerArtwork} src={winner.album.imageUrl} alt={`Album artwork for ${winner.album.name}`} />
+            <img
+              className={styles.winnerArtwork}
+              src={winner.album.imageUrl}
+              alt={`Album artwork for ${winner.album.name}`}
+            />
           )}
           <div className={styles.winnerDetails}>
             <h3>{winner.title}</h3>
-            <p className={styles.winnerArtists}>{winner.artists.join(', ')}</p>
+            <p className={styles.winnerArtists}>{winner.artists.join(", ")}</p>
             <dl className={styles.songDetails}>
-              <div><dt>Album</dt><dd>{winner.album.name}</dd></div>
-              {winner.releaseDate && <div><dt>Released</dt><dd>{winner.releaseDate}</dd></div>}
-              <div><dt>Duration</dt><dd>{formatDuration(winner.durationMs)}</dd></div>
-              <div><dt>Spotify popularity</dt><dd>{winner.popularity}/100</dd></div>
+              <div>
+                <dt>Album</dt>
+                <dd>{winner.album.name}</dd>
+              </div>
+              {winner.releaseDate && (
+                <div>
+                  <dt>Released</dt>
+                  <dd>{winner.releaseDate}</dd>
+                </div>
+              )}
+              <div>
+                <dt>Duration</dt>
+                <dd>{formatDuration(winner.durationMs)}</dd>
+              </div>
+              <div>
+                <dt>Spotify popularity</dt>
+                <dd>{winner.popularity}/100</dd>
+              </div>
             </dl>
           </div>
         </article>
         <SpotifyPlayer song={winner} />
-        <section className={styles.performanceCard} aria-labelledby="performance-heading">
+        <section
+          className={styles.performanceCard}
+          aria-labelledby="performance-heading"
+        >
           <h3 id="performance-heading">Tournament performance</h3>
-          {isWinnerStatsLoading && <p role="status">Loading performance statistics...</p>}
+          {isWinnerStatsLoading && (
+            <p role="status">Loading performance statistics...</p>
+          )}
           {!isWinnerStatsLoading && winnerStats && (
             <dl className={styles.performanceStats}>
-              <div><dt>Wins</dt><dd>{winnerStats.wins}</dd></div>
-              <div><dt>Losses</dt><dd>{winnerStats.losses}</dd></div>
-              <div><dt>Appearances</dt><dd>{winnerStats.appearances}</dd></div>
-              <div><dt>Win rate</dt><dd>{Math.round(winnerStats.winRate * 100)}%</dd></div>
+              <div>
+                <dt>Wins</dt>
+                <dd>{winnerStats.wins}</dd>
+              </div>
+              <div>
+                <dt>Losses</dt>
+                <dd>{winnerStats.losses}</dd>
+              </div>
+              <div>
+                <dt>Appearances</dt>
+                <dd>{winnerStats.appearances}</dd>
+              </div>
+              <div>
+                <dt>Win rate</dt>
+                <dd>{Math.round(winnerStats.winRate * 100)}%</dd>
+              </div>
             </dl>
           )}
-          {!isWinnerStatsLoading && !winnerStats && <p>No recorded performance statistics yet.</p>}
+          {!isWinnerStatsLoading && !winnerStats && (
+            <p>No recorded performance statistics yet.</p>
+          )}
         </section>
         <Accordion title="Hall of Fame">
           <HallOfFame />
         </Accordion>
-        <button type="button" onClick={resetGame} className={styles.playAgainButton}>Play Again</button>
+        <button
+          type="button"
+          onClick={resetGame}
+          className={styles.playAgainButton}
+        >
+          Play Again
+        </button>
       </section>
     );
   }
 
-  if (isLoading) return <ProgressBar current={0} total={1} label="Loading songs..." />;
-  if (contenders.length === 0) return <div role="alert">{error ?? 'No songs are available.'}</div>;
+  if (isLoading)
+    return <ProgressBar current={0} total={1} label="Loading songs..." />;
+  if (contenders.length === 0)
+    return <div role="alert">{error ?? "No songs are available."}</div>;
 
   const song1 = contenders[currentBattleIndex];
   const song2 = contenders[currentBattleIndex + 1];
@@ -193,24 +260,52 @@ const SongBattle = () => {
 
   return (
     <section aria-labelledby="round-heading">
-      {error && <div className={styles.errorMessage} role="status">{error}</div>}
+      {error && (
+        <div className={styles.errorMessage} role="status">
+          {error}
+        </div>
+      )}
       {isBattleLoading ? (
-        <div className={styles.battleLoading} role="status">Loading next battle...</div>
+        <div className={styles.battleLoading} role="status">
+          Loading next battle...
+        </div>
       ) : (
         <>
           <div className={styles.songBattleContainer}>
-            <div className={`${styles.songPanel} ${currentWinnerId === song1.id ? styles.winner : currentLoserId === song1.id ? styles.loser : ''}`}>
+            <div
+              className={`${styles.songPanel} ${currentWinnerId === song1.id ? styles.winner : currentLoserId === song1.id ? styles.loser : ""}`}
+            >
               <SpotifyPlayer song={song1} />
-              <button type="button" onClick={() => handleVote(song1)} className={`${styles.voteButton} ${lastClickedButtonId === song1.id ? styles.votedButton : ''}`}>Vote</button>
+              <button
+                type="button"
+                onClick={() => handleVote(song1)}
+                className={`${styles.voteButton} ${lastClickedButtonId === song1.id ? styles.votedButton : ""}`}
+              >
+                Vote
+              </button>
             </div>
-            <div className={styles.vsText} aria-hidden="true">VS.</div>
-            <div className={`${styles.songPanel} ${currentWinnerId === song2.id ? styles.winner : currentLoserId === song2.id ? styles.loser : ''}`}>
+            <div className={styles.vsText} aria-hidden="true">
+              VS.
+            </div>
+            <div
+              className={`${styles.songPanel} ${currentWinnerId === song2.id ? styles.winner : currentLoserId === song2.id ? styles.loser : ""}`}
+            >
               <SpotifyPlayer song={song2} />
-              <button type="button" onClick={() => handleVote(song2)} className={`${styles.voteButton} ${lastClickedButtonId === song2.id ? styles.votedButton : ''}`}>Vote</button>
+              <button
+                type="button"
+                onClick={() => handleVote(song2)}
+                className={`${styles.voteButton} ${lastClickedButtonId === song2.id ? styles.votedButton : ""}`}
+              >
+                Vote
+              </button>
             </div>
           </div>
           <h2 id="round-heading">Round {round}</h2>
-          <ProgressBar current={currentMatchupNumber} total={totalMatchupsInRound} label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`} />
+          <ProgressBar
+            current={currentMatchupNumber}
+            total={totalMatchupsInRound}
+            label={`Matchup ${currentMatchupNumber} of ${totalMatchupsInRound}`}
+          />
         </>
       )}
     </section>

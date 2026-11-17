@@ -1,11 +1,20 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-const spotifyIdSchema = z.string().regex(/^[A-Za-z0-9]{22}$/, 'Invalid Spotify ID');
-export const decadeSchema = z.enum(['1970s', '1980s', '1990s', '2000s', '2010s', '2020s']);
+const spotifyIdSchema = z
+  .string()
+  .regex(/^[A-Za-z0-9]{22}$/, "Invalid Spotify ID");
+export const decadeSchema = z.enum([
+  "1970s",
+  "1980s",
+  "1990s",
+  "2000s",
+  "2010s",
+  "2020s",
+]);
 
 export const spotifyEmbedSchema = z.object({
-  provider: z.literal('spotify'),
-  contentType: z.literal('track'),
+  provider: z.literal("spotify"),
+  contentType: z.literal("track"),
   spotifyId: spotifyIdSchema,
   spotifyUri: z.string().regex(/^spotify:track:[A-Za-z0-9]{22}$/),
   embedUrl: z.url(),
@@ -25,11 +34,14 @@ export const songSchema = z.object({
   spotify: spotifyEmbedSchema,
 });
 
-export const sourceSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('random') }),
-  z.object({ type: z.literal('decade'), decade: decadeSchema }),
-  z.object({ type: z.literal('genre'), genre: z.string().trim().min(1).max(64) }),
-  z.object({ type: z.literal('playlist'), playlistUrl: z.url() }),
+export const sourceSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("random") }),
+  z.object({ type: z.literal("decade"), decade: decadeSchema }),
+  z.object({
+    type: z.literal("genre"),
+    genre: z.string().trim().min(1).max(64),
+  }),
+  z.object({ type: z.literal("playlist"), playlistUrl: z.url() }),
 ]);
 
 export const battleRequestSchema = z.object({
@@ -53,9 +65,12 @@ export const voteRequestSchema = z.object({
 });
 
 export const healthResponseSchema = z.object({
-  status: z.enum(['ok', 'degraded']),
+  status: z.enum(["ok", "degraded"]),
   uptimeSeconds: z.number().nonnegative(),
-  database: z.object({ connected: z.boolean(), songCount: z.number().int().nonnegative() }),
+  database: z.object({
+    connected: z.boolean(),
+    songCount: z.number().int().nonnegative(),
+  }),
   spotify: z.object({ configured: z.boolean(), authenticated: z.boolean() }),
 });
 

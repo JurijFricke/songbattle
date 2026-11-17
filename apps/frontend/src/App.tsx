@@ -1,9 +1,10 @@
-import React, { Suspense, lazy } from 'react';
-import StartMenu from './components/StartMenu';
-import styles from './App.module.css';
-import { GameProvider, useGame } from './context/GameContext';
+import React, { Suspense, lazy } from "react";
+import StartMenu from "./components/StartMenu";
+import styles from "./App.module.css";
+import { GameProvider } from "./context/GameContext";
+import { useGame } from "./context/useGame";
 
-const SongBattle = lazy(() => import('./components/SongBattle')); // Lazy load the component
+const SongBattle = lazy(() => import("./components/SongBattle")); // Lazy load the component
 
 // This component now decides which view to show based on context
 const AppContent = () => {
@@ -11,11 +12,15 @@ const AppContent = () => {
 
   return (
     <>
-      <a className="skipLink" href="#main-content">Skip to main content</a>
+      <a className="skipLink" href="#main-content">
+        Skip to main content
+      </a>
       <header className={styles.appHeader}>
         <p className={styles.eyebrow}>Spotify-powered tournament</p>
         <h1>Song Battle</h1>
-        <p className={styles.subtitle}>Listen first. Choose carefully. Crown a champion.</p>
+        <p className={styles.subtitle}>
+          Listen first. Choose carefully. Crown a champion.
+        </p>
       </header>
       <main id="main-content" className={styles.mainContent} tabIndex={-1}>
         {gameStarted ? (
@@ -41,4 +46,3 @@ function App() {
 }
 
 export default App;
-

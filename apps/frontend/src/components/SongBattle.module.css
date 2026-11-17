@@ -192,7 +192,11 @@
   .songPanel,
   .voteButton,
   .playAgainButton {
-    transition: transform 180ms ease, opacity 180ms ease, background-color 180ms ease, border-color 180ms ease;
+    transition:
+      transform 180ms ease,
+      opacity 180ms ease,
+      background-color 180ms ease,
+      border-color 180ms ease;
   }
 
   .voteButton:hover:not(:disabled),

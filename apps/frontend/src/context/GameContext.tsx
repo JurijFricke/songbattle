@@ -1,19 +1,7 @@
-import { createContext, useState, useContext, useCallback, type ReactNode } from 'react';
-import type { BattleSource } from '@songbattle/contracts';
+import { useCallback, useState, type ReactNode } from "react";
+import type { BattleSource } from "@songbattle/contracts";
+import { GameContext } from "./game-context";
 
-// Define the shape of the context state
-interface GameState {
-  gameStarted: boolean;
-  songCount: number;
-  source: BattleSource | null;
-  startGame: (songCount: number, source: BattleSource) => void;
-  resetGame: () => void;
-}
-
-// Create the context with a default undefined value
-const GameContext = createContext<GameState | undefined>(undefined);
-
-// Create a provider component
 interface GameProviderProps {
   children: ReactNode;
 }
@@ -27,33 +15,17 @@ export const GameProvider = ({ children }: GameProviderProps) => {
     setSongCount(count);
     setSource(nextSource);
     setGameStarted(true);
-  }, []); // Dependencies are setters, which are stable
+  }, []);
 
   const resetGame = useCallback(() => {
     setGameStarted(false);
-    // Dependencies are setters, which are stable
   }, []);
 
-  const value = {
-    gameStarted,
-    songCount,
-    source,
-    startGame,
-    resetGame,
-  };
-
   return (
-    <GameContext.Provider value={value}>
+    <GameContext.Provider
+      value={{ gameStarted, songCount, source, startGame, resetGame }}
+    >
       {children}
     </GameContext.Provider>
   );
-};
-
-// Create a custom hook for easy access to the context
-export const useGame = () => {
-  const context = useContext(GameContext);
-  if (context === undefined) {
-    throw new Error('useGame must be used within a GameProvider');
-  }
-  return context;
 };

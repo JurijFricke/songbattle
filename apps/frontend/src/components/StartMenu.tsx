@@ -1,24 +1,26 @@
-import { useState, type FormEvent } from 'react';
-import { decadeSchema, type BattleSource } from '@songbattle/contracts';
-import { useGame } from '../context/GameContext';
-import Accordion from './Accordion';
-import HallOfFame from './HallOfFame';
-import styles from './StartMenu.module.css';
+import { useState, type FormEvent } from "react";
+import { decadeSchema, type BattleSource } from "@songbattle/contracts";
+import { useGame } from "../context/useGame";
+import Accordion from "./Accordion";
+import HallOfFame from "./HallOfFame";
+import styles from "./StartMenu.module.css";
 
 const bracketSizes = [16, 32, 64, 128, 256] as const;
 
 const StartMenu = () => {
   const { startGame } = useGame();
   const [songCount, setSongCount] = useState<(typeof bracketSizes)[number]>(16);
-  const [playlistUrl, setPlaylistUrl] = useState('');
-  const [decade, setDecade] = useState('any');
-  const [genre, setGenre] = useState('any');
+  const [playlistUrl, setPlaylistUrl] = useState("");
+  const [decade, setDecade] = useState("any");
+  const [genre, setGenre] = useState("any");
 
   const buildSource = (): BattleSource => {
-    if (playlistUrl.trim()) return { type: 'playlist', playlistUrl: playlistUrl.trim() };
-    if (decade !== 'any') return { type: 'decade', decade: decadeSchema.parse(decade) };
-    if (genre !== 'any') return { type: 'genre', genre };
-    return { type: 'random' };
+    if (playlistUrl.trim())
+      return { type: "playlist", playlistUrl: playlistUrl.trim() };
+    if (decade !== "any")
+      return { type: "decade", decade: decadeSchema.parse(decade) };
+    if (genre !== "any") return { type: "genre", genre };
+    return { type: "random" };
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
@@ -27,16 +29,22 @@ const StartMenu = () => {
   };
 
   const hasPlaylist = playlistUrl.trim().length > 0;
-  const hasDecade = decade !== 'any';
+  const hasDecade = decade !== "any";
 
   return (
     <div className={styles.menuLayout}>
       <section className={styles.startCard} aria-labelledby="start-heading">
         <p className={styles.cardEyebrow}>Build your bracket</p>
         <h2 id="start-heading">Choose your battle</h2>
-        <p className={styles.intro}>Pick a pool, then listen to both contenders before you vote.</p>
+        <p className={styles.intro}>
+          Pick a pool, then listen to both contenders before you vote.
+        </p>
 
-        <form className={styles.form} onSubmit={handleSubmit} aria-labelledby="start-heading">
+        <form
+          className={styles.form}
+          onSubmit={handleSubmit}
+          aria-labelledby="start-heading"
+        >
           <fieldset className={styles.fieldset}>
             <legend>Bracket size</legend>
             <label className={styles.field} htmlFor="song-count">
@@ -45,10 +53,18 @@ const StartMenu = () => {
                 id="song-count"
                 name="songCount"
                 value={songCount}
-                onChange={(event) => setSongCount(Number(event.target.value) as (typeof bracketSizes)[number])}
+                onChange={(event) =>
+                  setSongCount(
+                    Number(event.target.value) as (typeof bracketSizes)[number],
+                  )
+                }
                 className={styles.control}
               >
-                {bracketSizes.map((size) => <option key={size} value={size}>{size}</option>)}
+                {bracketSizes.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
               </select>
             </label>
           </fieldset>
@@ -56,7 +72,9 @@ const StartMenu = () => {
           <fieldset className={styles.fieldset}>
             <legend>Song source</legend>
             <label className={styles.field} htmlFor="playlist-url">
-              <span>Spotify playlist URL <small>(optional)</small></span>
+              <span>
+                Spotify playlist URL <small>(optional)</small>
+              </span>
               <input
                 id="playlist-url"
                 name="playlistUrl"
@@ -72,10 +90,15 @@ const StartMenu = () => {
                 aria-describedby="playlist-help"
               />
             </label>
-            <p id="playlist-help" className={styles.helpText}>Use a playlist to battle tracks from a collection you already love.</p>
+            <p id="playlist-help" className={styles.helpText}>
+              Use a playlist to battle tracks from a collection you already
+              love.
+            </p>
 
             <label className={styles.field} htmlFor="decade-select">
-              <span>Decade <small>(optional)</small></span>
+              <span>
+                Decade <small>(optional)</small>
+              </span>
               <select
                 id="decade-select"
                 name="decade"
@@ -95,7 +118,9 @@ const StartMenu = () => {
             </label>
 
             <label className={styles.field} htmlFor="genre-select">
-              <span>Genre <small>(optional)</small></span>
+              <span>
+                Genre <small>(optional)</small>
+              </span>
               <select
                 id="genre-select"
                 name="genre"
@@ -118,7 +143,9 @@ const StartMenu = () => {
             </label>
           </fieldset>
 
-          <button type="submit" className={styles.startGameButton}>Start battle</button>
+          <button type="submit" className={styles.startGameButton}>
+            Start battle
+          </button>
         </form>
       </section>
 
