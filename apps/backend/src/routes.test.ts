@@ -1,6 +1,13 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { app } from "./server.js";
+import { db, initializeDatabase } from "./database/client.js";
+import { migrate } from "drizzle-orm/libsql/migrator";
+
+beforeAll(async () => {
+  await initializeDatabase();
+  await migrate(db, { migrationsFolder: "./drizzle" });
+});
 
 describe("API routes", () => {
   it("returns a health response without requiring Spotify credentials", async () => {
