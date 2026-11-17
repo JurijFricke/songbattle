@@ -209,7 +209,6 @@ With local backend `.env` credentials configured (never commit or share them):
   and third-party cookie behavior must be tested in real browsers.
 - The first repeated playlist request returns a different song order by design;
   bracket selection is randomized while source data is cached.
-- No browser-level E2E test has been added yet.
 - Manual keyboard, screen-reader, mobile, and cross-browser testing remains.
 - No ESLint/format enforcement or CI workflow has been added yet.
 - Vite builds emit non-fatal upstream Rollup warnings about annotation comments
@@ -236,8 +235,9 @@ With local backend `.env` credentials configured (never commit or share them):
 3. Test official Spotify Embeds manually while logged out, logged into Free if
    available, and logged into Premium; verify playback, scrubbing, save/like
    behavior, and browser privacy behavior.
-4. Add browser E2E coverage, likely Playwright, with network/provider mocks for
-   deterministic CI tests.
+4. Add deterministic mocked browser E2E coverage alongside the real integration
+   flow test; the current Playwright test uses the local Spotify credentials and
+   the public playlist fixture.
 5. Add ESLint/Prettier enforcement and make root `typecheck`, `test`, `build`,
    and `format:check` fail when an app is missing a required script.
 6. Resolve remaining API/data-model issues: vote idempotency, foreign keys,
