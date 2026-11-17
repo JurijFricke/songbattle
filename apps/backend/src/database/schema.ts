@@ -15,6 +15,7 @@ export const songs = sqliteTable(
     albumName: text('album_name').notNull(),
     albumImageUrl: text('album_image_url'),
     releaseDate: text('release_date'),
+    releaseYear: integer('release_year').notNull(),
     durationMs: integer('duration_ms').notNull(),
     popularity: integer('popularity').notNull(),
     spotifyUri: text('spotify_uri').notNull(),

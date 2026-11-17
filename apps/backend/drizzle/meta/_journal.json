@@ -8,6 +8,13 @@
       "when": 1794879368068,
       "tag": "0000_odd_photon",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794879677149,
+      "tag": "0001_bent_bishop",
+      "breakpoints": true
     }
   ]
 }
