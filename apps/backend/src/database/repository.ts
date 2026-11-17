@@ -1,7 +1,15 @@
 import { and, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import type { Song } from '@songbattle/contracts';
 import { db } from './client.js';
-import { playlistCache, songs, type NewSongRow, type SongRow } from './schema.js';
+import {
+  battleSessions,
+  battleVotes,
+  playlistCache,
+  songStats,
+  songs,
+  type NewSongRow,
+  type SongRow,
+} from './schema.js';
 
 const now = (): number => Date.now();
 
@@ -145,4 +153,83 @@ export const cachePlaylistSongs = async (playlistId: string, cachedSongs: readon
       expiresAt: fetchedAt + playlistCacheTtlMs,
     },
   });
+};
+
+export interface NewBattleSession {
+  id: string;
+  sourceType: string;
+  sourceValue?: string;
+  requestedCount: number;
+  effectiveCount: number;
+}
+
+export const createBattleSession = async (session: NewBattleSession): Promise<void> => {
+  await db.insert(battleSessions).values({
+    id: session.id,
+    sourceType: session.sourceType,
+    ...(session.sourceValue ? { sourceValue: session.sourceValue } : {}),
+    requestedCount: session.requestedCount,
+    effectiveCount: session.effectiveCount,
+    startedAt: now(),
+  });
+};
+
+export interface NewBattleVote {
+  sessionId: string;
+  matchupNumber: number;
+  winnerSongId: string;
+  loserSongId: string;
+}
+
+export const recordBattleVote = async (vote: NewBattleVote): Promise<void> => {
+  const timestamp = now();
+  await db.insert(battleVotes).values({ ...vote, createdAt: timestamp });
+
+  await db.insert(songStats).values([
+    { songId: vote.winnerSongId, wins: 1, losses: 0, appearances: 1, updatedAt: timestamp },
+    { songId: vote.loserSongId, wins: 0, losses: 1, appearances: 1, updatedAt: timestamp },
+  ]).onConflictDoUpdate({
+    target: songStats.songId,
+    set: {
+      wins: sql`${songStats.wins} + excluded.wins`,
+      losses: sql`${songStats.losses} + excluded.losses`,
+      appearances: sql`${songStats.appearances} + excluded.appearances`,
+      updatedAt: timestamp,
+    },
+  });
+};
+
+export const completeBattleSession = async (sessionId: string, winnerSongId: string): Promise<void> => {
+  await db.update(battleSessions)
+    .set({ completedAt: now(), winnerSongId })
+    .where(eq(battleSessions.id, sessionId));
+};
+
+export interface LeaderboardEntry {
+  songId: string;
+  title: string;
+  artists: string[];
+  wins: number;
+  losses: number;
+  appearances: number;
+}
+
+export const getLeaderboard = async (limit = 10): Promise<LeaderboardEntry[]> => {
+  const rows = await db.select({
+    song: songs,
+    stats: songStats,
+  })
+    .from(songStats)
+    .innerJoin(songs, eq(songStats.songId, songs.id))
+    .orderBy(sql`${songStats.wins} DESC`, sql`${songStats.losses} ASC`)
+    .limit(limit);
+
+  return rows.map(({ song, stats }) => ({
+    songId: song.id,
+    title: song.title,
+    artists: parseArtists(song.artistsJson),
+    wins: stats.wins,
+    losses: stats.losses,
+    appearances: stats.appearances,
+  }));
 };
