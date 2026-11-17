@@ -131,6 +131,12 @@ export const formatError = (error: unknown): { status: number; body: unknown } =
   if (error instanceof BattleVoteError) {
     return { status: error.status, body: { error: { code: error.status, message: error.message } } };
   }
+  if (error instanceof SpotifyApiError && error.status === 404) {
+    return { status: 404, body: { error: { code: 404, message: 'The Spotify playlist or content was not found or is unavailable.' } } };
+  }
+  if (error instanceof SpotifyApiError && error.status === 403) {
+    return { status: 502, body: { error: { code: 502, message: 'Spotify refused access to this content in the configured market.' } } };
+  }
   if (error instanceof SpotifyApiError && error.status === 429) {
     return {
       status: 503,

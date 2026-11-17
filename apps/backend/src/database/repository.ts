@@ -1,6 +1,7 @@
 import { and, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import type { Song } from '@songbattle/contracts';
 import { db } from './client.js';
+import { config } from '../config.js';
 import {
   battleSessions,
   battleSessionSongs,
@@ -119,8 +120,6 @@ export const getSongsByIds = async (ids: readonly string[]): Promise<Song[]> => 
   });
 };
 
-const playlistCacheTtlMs = 24 * 60 * 60 * 1000;
-
 export const getCachedPlaylistSongs = async (playlistId: string): Promise<Song[] | null> => {
   const row = await db.query.playlistCache.findFirst({
     where: eq(playlistCache.playlistId, playlistId),
@@ -145,15 +144,38 @@ export const cachePlaylistSongs = async (playlistId: string, cachedSongs: readon
     playlistId,
     trackIdsJson: JSON.stringify(cachedSongs.map((song) => song.id)),
     fetchedAt,
-    expiresAt: fetchedAt + playlistCacheTtlMs,
+    expiresAt: fetchedAt + config.playlistCacheTtlMs,
   }).onConflictDoUpdate({
     target: playlistCache.playlistId,
     set: {
       trackIdsJson: JSON.stringify(cachedSongs.map((song) => song.id)),
       fetchedAt,
-      expiresAt: fetchedAt + playlistCacheTtlMs,
+      expiresAt: fetchedAt + config.playlistCacheTtlMs,
     },
   });
+};
+
+export const pruneExpiredPlaylistCache = async (): Promise<void> => {
+  await db.delete(playlistCache).where(lte(playlistCache.expiresAt, now()));
+};
+
+export const pruneSongCache = async (maxSize = config.songCacheMaxSize): Promise<number> => {
+  const allSongs = await db.select({ id: songs.id, updatedAt: songs.updatedAt })
+    .from(songs)
+    .orderBy(sql`${songs.updatedAt} ASC`);
+  if (allSongs.length <= maxSize) return 0;
+
+  const protectedRows = await db.select({ id: battleSessionSongs.songId }).from(battleSessionSongs);
+  const protectedIds = new Set(protectedRows.map(({ id }) => id));
+  const statsRows = await db.select({ id: songStats.songId }).from(songStats);
+  for (const { id } of statsRows) protectedIds.add(id);
+
+  const removable = allSongs
+    .filter(({ id }) => !protectedIds.has(id))
+    .slice(0, Math.max(0, allSongs.length - maxSize));
+  if (removable.length === 0) return 0;
+  await db.delete(songs).where(inArray(songs.id, removable.map(({ id }) => id)));
+  return removable.length;
 };
 
 export interface NewBattleSession {

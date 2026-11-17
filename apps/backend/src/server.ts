@@ -8,6 +8,7 @@ import { migrate } from 'drizzle-orm/libsql/migrator';
 import { db, initializeDatabase, sqliteClient } from './database/client.js';
 import { config } from './config.js';
 import { formatError, apiRouter } from './routes.js';
+import { SpotifyApiError } from './spotify/client.js';
 
 export const app = express();
 
@@ -24,6 +25,9 @@ app.use(rateLimit({
 app.use('/api', apiRouter);
 
 const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
+  if (error instanceof SpotifyApiError && error.retryAfterSeconds !== undefined) {
+    response.setHeader('Retry-After', String(error.retryAfterSeconds));
+  }
   const formatted = formatError(error);
   response.status(formatted.status).json(formatted.body);
 };

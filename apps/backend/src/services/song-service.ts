@@ -4,6 +4,8 @@ import {
   getCachedPlaylistSongs,
   getRandomSongs,
   getSongsByReleaseYear,
+  pruneExpiredPlaylistCache,
+  pruneSongCache,
   saveSongs,
 } from '../database/repository.js';
 import { selectBracket } from '../domain/bracket.js';
@@ -56,6 +58,8 @@ export const spotifyClient = new SpotifyClient({
   market: process.env.SPOTIFY_MARKET ?? 'DE',
 });
 
+let activeGeneralRefresh: Promise<Song[]> | null = null;
+
 const searchSongs = async (queries: readonly string[], yearRange?: string): Promise<Song[]> => {
   const results = await Promise.all(
     queries.map(async (query) => {
@@ -105,15 +109,29 @@ const getPlaylistSongs = async (playlistId: string): Promise<Song[]> => {
   const uniqueSongs = deduplicateSongs(tracks);
   if (uniqueSongs.length > 0) {
     await cachePlaylistSongs(playlistId, uniqueSongs);
+    await pruneExpiredPlaylistCache();
+    await pruneSongCache();
   }
   return uniqueSongs;
 };
 
 const refreshGeneralPool = async (): Promise<Song[]> => {
-  const queries = [...genreQueries].sort(() => Math.random() - 0.5).slice(0, 6);
-  const freshSongs = await searchSongs(queries);
-  await saveSongs(freshSongs);
-  return freshSongs;
+  if (activeGeneralRefresh) return activeGeneralRefresh;
+
+  activeGeneralRefresh = (async () => {
+    const queries = [...genreQueries].sort(() => Math.random() - 0.5).slice(0, 6);
+    const freshSongs = await searchSongs(queries);
+    await saveSongs(freshSongs);
+    await pruneExpiredPlaylistCache();
+    await pruneSongCache();
+    return freshSongs;
+  })();
+
+  try {
+    return await activeGeneralRefresh;
+  } finally {
+    activeGeneralRefresh = null;
+  }
 };
 
 export const resolveBattleSongs = async (
@@ -135,11 +153,15 @@ export const resolveBattleSongs = async (
     if (pool.length < requestedCount * 2) {
       const freshSongs = await searchSongs(['top hits', 'genre:pop', 'genre:rock', 'genre:dance'], `${startYear}-${endYear}`);
       await saveSongs(freshSongs);
+      await pruneExpiredPlaylistCache();
+      await pruneSongCache();
       pool = await getSongsByReleaseYear(startYear, endYear, requestedCount * 4);
     }
   } else if (source.type === 'genre') {
     pool = await searchSongs([`genre:${source.genre}`]);
     await saveSongs(pool);
+    await pruneExpiredPlaylistCache();
+    await pruneSongCache();
   } else {
     pool = await getRandomSongs(requestedCount * 4);
     if (pool.length < requestedCount * 2) pool = [...pool, ...(await refreshGeneralPool())];

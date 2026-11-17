@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import { config } from '../config.js';
 import {
   spotifyPlaylistTracksResponseSchema,
   spotifySearchResponseSchema,
@@ -100,19 +101,31 @@ export class SpotifyClient {
 
   private async request<T>(url: URL, schema: { parse: (value: unknown) => T }): Promise<T> {
     const accessToken = await this.getAccessToken();
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    for (let attempt = 1; attempt <= config.spotifyMaxAttempts; attempt += 1) {
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
 
-    if (!response.ok) {
-      const retryAfter = response.headers.get('retry-after');
-      throw new SpotifyApiError(
-        `Spotify API request failed with HTTP ${response.status}.`,
-        response.status,
-        retryAfter ? Number.parseInt(retryAfter, 10) : undefined,
+      if (response.ok) return schema.parse(await response.json());
+
+      const retryAfterHeader = response.headers.get('retry-after');
+      const retryAfterSeconds = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) : undefined;
+      if (response.status !== 429 || attempt === config.spotifyMaxAttempts) {
+        throw new SpotifyApiError(
+          `Spotify API request failed with HTTP ${response.status}.`,
+          response.status,
+          retryAfterSeconds,
+        );
+      }
+
+      const fallbackDelay = 2 ** (attempt - 1) * 500;
+      const retryDelay = Math.min(
+        (Number.isFinite(retryAfterSeconds) ? retryAfterSeconds! * 1000 : fallbackDelay),
+        config.spotifyMaxRetryDelayMs,
       );
+      await new Promise<void>((resolve) => setTimeout(resolve, retryDelay));
     }
 
-    return schema.parse(await response.json());
+    throw new SpotifyApiError('Spotify API request retry limit reached.', 429);
   }
 }
