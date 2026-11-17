@@ -270,6 +270,35 @@ packages/contracts
   impossible index, and `spotify/client.ts` narrows `retryAfterSeconds` with an
   explicit `!== undefined` check before `Number.isFinite`. No rule was
   suppressed, no assertion remains.
+- `@typescript-eslint/no-unused-vars` now follows the codebase's `_`-prefix
+  convention (`argsIgnorePattern`/`varsIgnorePattern`), needed for the mandatory
+  fourth parameter of Express error middleware.
+- Backend tests are fully isolated from real databases: `vitest.config.ts`
+  creates a throwaway SQLite database per run via `test.env.DATABASE_URL` and
+  deletes it on exit; `fileParallelism: false` keeps the shared run database
+  consistent.
+- Backend integration coverage now includes a real-SQLite suite
+  (`repository.integration.test.ts`, 10 tests): song persistence roundtrips
+  including optional fields, FK enforcement on session songs, unique
+  `(session_id, matchup_number)` at the database level, transactional statistics
+  with `wins + losses === appearances`, leaderboard ordering, precise
+  `BattleVoteError` statuses (400/404/409), duplicate-vote idempotency,
+  session-completion semantics, playlist-cache expiry, and cache pruning that
+  protects session/statistics songs. HTTP-level lifecycle coverage in
+  `routes.test.ts` (15 tests) exercises the full vote/complete/stats request
+  path with a seeded session, no Spotify dependency.
+- The suite is deterministic across runs (verified 5x) despite file-order
+  variation: cross-file leaderboard assertions use dominant-record and ordering
+  properties instead of exact membership.
+- Production bug found and fixed by the new tests: `server.ts` declared the
+  Express error handler with three parameters, so Express treated it as normal
+  middleware and every thrown `BattleVoteError`/`SpotifyApiError` fell through
+  to the default HTML error page. The JSON error contract
+  (`{ error: { code, message } }`) never actually executed. The handler now has
+  the required four-parameter arity and structured JSON errors are asserted.
+- `completeBattleSession` semantics hardened: completing an already-complete
+  session with the same winner stays idempotent (204), while a different winner
+  now returns 409 instead of silently no-oping.
 
 ### Verified commands
 
@@ -320,8 +349,12 @@ With local backend `.env` credentials configured (never commit or share them):
   in Zod’s distributed source.
 - The root build/test scripts currently use `--if-present`; the final CI gate
   should explicitly require every app/package to expose the required scripts.
-- Backend vote idempotency, session ownership semantics, and database foreign
-  keys need a final review before production.
+- Backend vote idempotency, session ownership, foreign keys, completion
+  semantics, and statistics aggregation are covered by real-SQLite integration
+  tests. Remaining review item: vote completion is guarded by
+  `completedAt IS NULL`, but two truly concurrent votes could interleave at
+  await points; acceptable for the single-process deployment, revisit only if
+  the API ever scales horizontally.
 - `CORS_ORIGIN` and production security headers need final same-origin/Caddy
   configuration.
 - SSH password/root-login hardening was planned but not yet performed; verify
@@ -333,35 +366,33 @@ With local backend `.env` credentials configured (never commit or share them):
 
 ## Next steps, in order
 
-1. Run backend vote/session completion/statistics integration tests against the
-   real SQLite database.
-2. Test the complete frontend battle flow using the local Vite proxy:
+1. Test the complete frontend battle flow using the local Vite proxy:
    start game → load Embeds → vote → next matchup → winner → stats.
-3. Test official Spotify Embeds manually while logged out, logged into Free if
+2. Test official Spotify Embeds manually while logged out, logged into Free if
    available, and logged into Premium; verify playback, scrubbing, save/like
    behavior, and browser privacy behavior.
-4. Add deterministic mocked browser E2E coverage alongside the real integration
+3. Add deterministic mocked browser E2E coverage alongside the real integration
    flow test; the current Playwright test uses the local Spotify credentials and
    the public playlist fixture.
-5. Reduce the temporary pnpm build-script allowlist now that the old CRA
+4. Reduce the temporary pnpm build-script allowlist now that the old CRA
    dependency tree is gone.
-6. Images are already built and tagged `:latest` on the VM. Remaining: create
+5. Images are already built and tagged `:latest` on the VM. Remaining: create
    `production.env` with real credentials, start the Quadlet units, verify Caddy
    persistence and the API health path, then test rollback.
-7. Configure a free domain/DNS when available:
+6. Configure a free domain/DNS when available:
 
 ```text
 example-domain → production
 staging.example-domain → staging
 ```
 
-8. Configure staging on the VM with separate SQLite/cache data, then validate
+7. Configure staging on the VM with separate SQLite/cache data, then validate
    deployment from `dev`.
-9. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
+8. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
    scheduled SQLite backups plus a tested restore procedure.
-10. Extend GitHub Actions with staging/production deployment after the VM
-    deployment files are validated.
-11. Promote the validated `dev` state to `main`, deploy production, and retain
+9. Extend GitHub Actions with staging/production deployment after the VM
+   deployment files are validated.
+10. Promote the validated `dev` state to `main`, deploy production, and retain
     old GitHub repositories until the user explicitly approves retirement.
 
 ## Latest commits on active dev

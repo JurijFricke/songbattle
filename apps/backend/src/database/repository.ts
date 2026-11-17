@@ -357,12 +357,29 @@ export const completeBattleSession = async (
   sessionId: string,
   winnerSongId: string,
 ): Promise<void> => {
+  const sessionRows = await db
+    .select({
+      completedAt: battleSessions.completedAt,
+      winnerSongId: battleSessions.winnerSongId,
+    })
+    .from(battleSessions)
+    .where(eq(battleSessions.id, sessionId))
+    .limit(1);
+  const session = sessionRows[0];
+  if (!session) throw new BattleVoteError(404, "Battle session was not found.");
+  if (session.completedAt !== null) {
+    if (session.winnerSongId !== winnerSongId) {
+      throw new BattleVoteError(
+        409,
+        "This battle session is already complete with a different winner.",
+      );
+    }
+    return;
+  }
   const sessionSongs = await db
     .select({ songId: battleSessionSongs.songId })
     .from(battleSessionSongs)
     .where(eq(battleSessionSongs.sessionId, sessionId));
-  if (sessionSongs.length === 0)
-    throw new BattleVoteError(404, "Battle session was not found.");
   if (!sessionSongs.some(({ songId }) => songId === winnerSongId)) {
     throw new BattleVoteError(
       409,

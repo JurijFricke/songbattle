@@ -32,7 +32,12 @@ app.use(
 );
 app.use("/api", apiRouter);
 
-const errorHandler: ErrorRequestHandler = (error, _request, response) => {
+const errorHandler: ErrorRequestHandler = (
+  error,
+  _request,
+  response,
+  _next,
+) => {
   if (
     error instanceof SpotifyApiError &&
     error.retryAfterSeconds !== undefined
