@@ -3,6 +3,7 @@ import type { Song } from '@songbattle/contracts';
 import { db } from './client.js';
 import {
   battleSessions,
+  battleSessionSongs,
   battleVotes,
   playlistCache,
   songStats,
@@ -161,16 +162,26 @@ export interface NewBattleSession {
   sourceValue?: string;
   requestedCount: number;
   effectiveCount: number;
+  songIds: readonly string[];
 }
 
 export const createBattleSession = async (session: NewBattleSession): Promise<void> => {
-  await db.insert(battleSessions).values({
-    id: session.id,
-    sourceType: session.sourceType,
-    ...(session.sourceValue ? { sourceValue: session.sourceValue } : {}),
-    requestedCount: session.requestedCount,
-    effectiveCount: session.effectiveCount,
-    startedAt: now(),
+  await db.transaction(async (transaction) => {
+    await transaction.insert(battleSessions).values({
+      id: session.id,
+      sourceType: session.sourceType,
+      ...(session.sourceValue ? { sourceValue: session.sourceValue } : {}),
+      requestedCount: session.requestedCount,
+      effectiveCount: session.effectiveCount,
+      startedAt: now(),
+    });
+    await transaction.insert(battleSessionSongs).values(
+      session.songIds.map((songId, position) => ({
+        sessionId: session.id,
+        songId,
+        position,
+      })),
+    );
   });
 };
 
@@ -181,28 +192,70 @@ export interface NewBattleVote {
   loserSongId: string;
 }
 
-export const recordBattleVote = async (vote: NewBattleVote): Promise<void> => {
-  const timestamp = now();
-  await db.insert(battleVotes).values({ ...vote, createdAt: timestamp });
+export class BattleVoteError extends Error {
+  public constructor(public readonly status: 400 | 404 | 409, message: string) {
+    super(message);
+    this.name = 'BattleVoteError';
+  }
+}
 
-  await db.insert(songStats).values([
-    { songId: vote.winnerSongId, wins: 1, losses: 0, appearances: 1, updatedAt: timestamp },
-    { songId: vote.loserSongId, wins: 0, losses: 1, appearances: 1, updatedAt: timestamp },
-  ]).onConflictDoUpdate({
-    target: songStats.songId,
-    set: {
-      wins: sql`${songStats.wins} + excluded.wins`,
-      losses: sql`${songStats.losses} + excluded.losses`,
-      appearances: sql`${songStats.appearances} + excluded.appearances`,
-      updatedAt: timestamp,
-    },
+export const recordBattleVote = async (vote: NewBattleVote): Promise<'recorded' | 'duplicate'> => {
+  if (vote.winnerSongId === vote.loserSongId) {
+    throw new BattleVoteError(400, 'Winner and loser must be different songs.');
+  }
+
+  const session = await db.select({ id: battleSessions.id, completedAt: battleSessions.completedAt })
+    .from(battleSessions)
+    .where(eq(battleSessions.id, vote.sessionId))
+    .limit(1);
+  const sessionRow = session[0];
+  if (!sessionRow) throw new BattleVoteError(404, 'Battle session was not found.');
+  if (sessionRow.completedAt !== null) throw new BattleVoteError(409, 'This battle session is already complete.');
+
+  const sessionSongs = await db.select({ songId: battleSessionSongs.songId })
+    .from(battleSessionSongs)
+    .where(eq(battleSessionSongs.sessionId, vote.sessionId));
+  const allowedSongIds = new Set(sessionSongs.map(({ songId }) => songId));
+  if (!allowedSongIds.has(vote.winnerSongId) || !allowedSongIds.has(vote.loserSongId)) {
+    throw new BattleVoteError(409, 'Both voted songs must belong to this battle session.');
+  }
+
+  const existingVote = await db.select({ id: battleVotes.id })
+    .from(battleVotes)
+    .where(and(eq(battleVotes.sessionId, vote.sessionId), eq(battleVotes.matchupNumber, vote.matchupNumber)))
+    .limit(1);
+  if (existingVote.length > 0) return 'duplicate';
+
+  const timestamp = now();
+  await db.transaction(async (transaction) => {
+    await transaction.insert(battleVotes).values({ ...vote, createdAt: timestamp });
+    await transaction.insert(songStats).values([
+      { songId: vote.winnerSongId, wins: 1, losses: 0, appearances: 1, updatedAt: timestamp },
+      { songId: vote.loserSongId, wins: 0, losses: 1, appearances: 1, updatedAt: timestamp },
+    ]).onConflictDoUpdate({
+      target: songStats.songId,
+      set: {
+        wins: sql`${songStats.wins} + excluded.wins`,
+        losses: sql`${songStats.losses} + excluded.losses`,
+        appearances: sql`${songStats.appearances} + excluded.appearances`,
+        updatedAt: timestamp,
+      },
+    });
   });
+  return 'recorded';
 };
 
 export const completeBattleSession = async (sessionId: string, winnerSongId: string): Promise<void> => {
+  const sessionSongs = await db.select({ songId: battleSessionSongs.songId })
+    .from(battleSessionSongs)
+    .where(eq(battleSessionSongs.sessionId, sessionId));
+  if (sessionSongs.length === 0) throw new BattleVoteError(404, 'Battle session was not found.');
+  if (!sessionSongs.some(({ songId }) => songId === winnerSongId)) {
+    throw new BattleVoteError(409, 'The winning song must belong to this battle session.');
+  }
   await db.update(battleSessions)
     .set({ completedAt: now(), winnerSongId })
-    .where(eq(battleSessions.id, sessionId));
+    .where(and(eq(battleSessions.id, sessionId), sql`${battleSessions.completedAt} IS NULL`));
 };
 
 export interface LeaderboardEntry {

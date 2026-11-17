@@ -1,5 +1,6 @@
 import { migrate } from 'drizzle-orm/libsql/migrator';
-import { db, sqliteClient } from './client.js';
+import { db, initializeDatabase, sqliteClient } from './client.js';
 
+await initializeDatabase();
 await migrate(db, { migrationsFolder: './drizzle' });
 sqliteClient.close();

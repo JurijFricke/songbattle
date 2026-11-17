@@ -14,6 +14,7 @@ import {
   getLeaderboard,
   getSongCount,
   getSongStats,
+  BattleVoteError,
   recordBattleVote,
 } from './database/repository.js';
 import { SpotifyApiError } from './spotify/client.js';
@@ -81,6 +82,7 @@ apiRouter.get('/songs', asyncHandler(async (request, response) => {
     sourceType: source.type,
     requestedCount: parsedQuery.data.count,
     effectiveCount: result.effectiveCount,
+    songIds: result.songs.map((song) => song.id),
     ...(sourceValue ? { sourceValue } : {}),
   });
 
@@ -100,8 +102,8 @@ apiRouter.post('/votes', asyncHandler(async (request, response) => {
     return;
   }
 
-  await recordBattleVote(parsedBody.data);
-  response.status(201).json({ recorded: true });
+  const result = await recordBattleVote(parsedBody.data);
+  response.status(result === 'recorded' ? 201 : 200).json({ recorded: result === 'recorded', duplicate: result === 'duplicate' });
 }));
 
 apiRouter.post('/sessions/:sessionId/complete', asyncHandler(async (request, response) => {
@@ -126,6 +128,9 @@ apiRouter.get('/stats/:songId', asyncHandler(async (request, response) => {
 }));
 
 export const formatError = (error: unknown): { status: number; body: unknown } => {
+  if (error instanceof BattleVoteError) {
+    return { status: error.status, body: { error: { code: error.status, message: error.message } } };
+  }
   if (error instanceof SpotifyApiError && error.status === 429) {
     return {
       status: 503,

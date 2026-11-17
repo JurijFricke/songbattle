@@ -5,7 +5,7 @@ import express, { type ErrorRequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { migrate } from 'drizzle-orm/libsql/migrator';
-import { db, sqliteClient } from './database/client.js';
+import { db, initializeDatabase, sqliteClient } from './database/client.js';
 import { config } from './config.js';
 import { formatError, apiRouter } from './routes.js';
 
@@ -30,6 +30,7 @@ const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => 
 app.use(errorHandler);
 
 export const startServer = async (): Promise<ReturnType<typeof app.listen>> => {
+  await initializeDatabase();
   await migrate(db, { migrationsFolder: './drizzle' });
   return app.listen(config.port, () => {
     console.log(`SongBattle API listening on port ${config.port}.`);

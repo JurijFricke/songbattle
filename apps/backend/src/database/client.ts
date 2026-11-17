@@ -27,3 +27,8 @@ export const sqliteClient = createClient({
 export const db = drizzle(sqliteClient, { schema });
 
 export type Database = typeof db;
+
+export const initializeDatabase = async (): Promise<void> => {
+  await sqliteClient.execute('PRAGMA foreign_keys = ON');
+  await sqliteClient.execute('PRAGMA journal_mode = WAL');
+};

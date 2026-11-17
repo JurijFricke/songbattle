@@ -4,6 +4,7 @@ import {
   primaryKey,
   sqliteTable,
   text,
+  uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
 
 export const songs = sqliteTable(
@@ -62,6 +63,19 @@ export const battleSessions = sqliteTable(
   (table) => [index('battle_sessions_started_at_idx').on(table.startedAt)],
 );
 
+export const battleSessionSongs = sqliteTable(
+  'battle_session_songs',
+  {
+    sessionId: text('session_id').notNull().references(() => battleSessions.id, { onDelete: 'cascade' }),
+    songId: text('song_id').notNull().references(() => songs.id, { onDelete: 'restrict' }),
+    position: integer('position').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.sessionId, table.songId] }),
+    index('battle_session_songs_session_idx').on(table.sessionId),
+  ],
+);
+
 export const battleVotes = sqliteTable(
   'battle_votes',
   {
@@ -76,6 +90,7 @@ export const battleVotes = sqliteTable(
     index('battle_votes_session_idx').on(table.sessionId),
     index('battle_votes_winner_idx').on(table.winnerSongId),
     index('battle_votes_loser_idx').on(table.loserSongId),
+    uniqueIndex('battle_votes_session_matchup_unique').on(table.sessionId, table.matchupNumber),
   ],
 );
 
