@@ -195,7 +195,12 @@ packages/contracts
   rootless Quadlet units. It is not activated on the VM yet.
 - ARM64 image validation passed on the Oracle VM: `songbattle-api:dev` and
   `songbattle-web:dev` built successfully. The VM checkout is
-  `/home/ubuntu/songbattle`; no services were started.
+  `/home/ubuntu/projects/songbattle`; no services were started.
+- VM checkout relocated from `/home/ubuntu/songbattle` to
+  `/home/ubuntu/projects/songbattle`. Quadlet `EnvironmentFile`/`Volume`
+  specifiers, `infra/README.md`, and `production.env.example` now use
+  `%h/projects/songbattle/...`. Runtime state paths on the VM are
+  `~/projects/songbattle/{data,caddy-data,caddy-config,production.env}`.
 
 ### Verified commands
 

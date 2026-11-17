@@ -7,11 +7,11 @@ After=songbattle-network.service
 Image=localhost/songbattle-api:latest
 ContainerName=songbattle-api
 Network=songbattle.network
-EnvironmentFile=%h/songbattle/production.env
+EnvironmentFile=%h/projects/songbattle/production.env
 Environment=NODE_ENV=production
 Environment=PORT=3001
 Environment=DATABASE_URL=file:/data/songbattle.db
-Volume=%h/songbattle/data:/data
+Volume=%h/projects/songbattle/data:/data
 ReadOnly=false
 NoNewPrivileges=true
 DropCapability=ALL

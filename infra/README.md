@@ -15,18 +15,35 @@ podman build -f apps/frontend/Dockerfile -t localhost/songbattle-web:latest .
 Both Dockerfiles are multi-stage and target the ARM64-compatible official Node
 and Caddy images used by the Oracle VM.
 
+## VM layout
+
+The repository lives at `~/projects/songbattle` on the VM. Runtime state lives
+beside it so a `git pull` never touches data:
+
+```text
+~/projects/songbattle            # git checkout (deploys from here)
+~/projects/songbattle/data       # SQLite database + WAL
+~/projects/songbattle/production.env
+~/projects/songbattle/caddy-data
+~/projects/songbattle/caddy-config
+```
+
+Quadlet units reference these through `%h/projects/songbattle/...`, so the
+checkout path and the state path must stay in sync.
+
 ## Install Quadlet units on the VM
 
 ```bash
+cd ~/projects/songbattle
 mkdir -p ~/.config/containers/systemd
-mkdir -p ~/songbattle/data
+mkdir -p ~/projects/songbattle/data
 cp infra/quadlet/* ~/.config/containers/systemd/
-cp infra/production.env.example ~/songbattle/production.env
-chmod 600 ~/songbattle/production.env
+cp infra/production.env.example ~/projects/songbattle/production.env
+chmod 600 ~/projects/songbattle/production.env
 ```
 
-Fill `~/songbattle/production.env` with the Spotify credentials and the actual
-production domain before starting services. Never commit that file.
+Fill `~/projects/songbattle/production.env` with the Spotify credentials and the
+actual production domain before starting services. Never commit that file.
 
 Reload and start:
 
@@ -57,5 +74,6 @@ sudo sysctl --system
 ```
 
 The web unit publishes both 80 and 443 and persists Caddy certificates under
-`~/songbattle/caddy-data` and `~/songbattle/caddy-config`. Do not expose
-production until DNS, HTTPS, backups, and rollback have been verified.
+`~/projects/songbattle/caddy-data` and `~/projects/songbattle/caddy-config`. Do
+not expose production until DNS, HTTPS, backups, and rollback have been
+verified.
