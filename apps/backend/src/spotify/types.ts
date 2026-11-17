@@ -25,7 +25,10 @@ export const spotifySearchResponseSchema = z.object({
 });
 
 export const spotifyPlaylistTracksResponseSchema = z.object({
-  items: z.array(z.object({ track: spotifyTrackSchema.nullable() })),
+  items: z.array(z.object({
+    item: spotifyTrackSchema.nullable().optional(),
+    track: spotifyTrackSchema.nullable().optional(),
+  })),
   next: z.url().nullable(),
   total: z.number().int().nonnegative(),
 });

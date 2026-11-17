@@ -90,10 +90,11 @@ const getPlaylistSongs = async (playlistId: string): Promise<Song[]> => {
 
   const tracks: Song[] = [];
   for (let offset = 0; offset < maximumPlaylistTracks;) {
-    const limit = Math.min(100, maximumPlaylistTracks - offset);
+    const limit = Math.min(50, maximumPlaylistTracks - offset);
     const response = await spotifyClient.getPlaylistTracks(playlistId, offset, limit);
-    const pageSongs = response.items.flatMap(({ track }) => {
-      const song = track ? normalizeTrack(track) : null;
+    const pageSongs = response.items.flatMap(({ item, track }) => {
+      const rawTrack = item ?? track;
+      const song = rawTrack ? normalizeTrack(rawTrack) : null;
       return song ? [song] : [];
     });
     tracks.push(...pageSongs);

@@ -57,7 +57,7 @@ export class SpotifyClient {
     offset: number,
     limit: number,
   ): Promise<SpotifyPlaylistTracksResponse> {
-    const url = new URL(`${spotifyApiBaseUrl}/playlists/${playlistId}/tracks`);
+    const url = new URL(`${spotifyApiBaseUrl}/playlists/${playlistId}/items`);
     url.searchParams.set('offset', String(offset));
     url.searchParams.set('limit', String(limit));
     url.searchParams.set('market', this.options.market);
