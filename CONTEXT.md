@@ -190,6 +190,9 @@ packages/contracts
   patched `>=0.45.2` line.
 - GitHub Actions CI run `44064223408` passed the complete quality job after
   route tests were changed to initialize their own migrated database.
+- ARM64 Podman deployment scaffolding is committed under `infra/`, including
+  multi-stage Node/Caddy images, Caddy routing, production env template, and
+  rootless Quadlet units. It is not activated on the VM yet.
 
 ### Verified commands
 
@@ -268,8 +271,8 @@ With local backend `.env` credentials configured (never commit or share them):
    the public playlist fixture.
 6. Run dependency/security audits and reduce the temporary pnpm build-script
    allowlist after the old CRA dependency tree is fully gone.
-7. Add Podman Quadlet units, Caddy configuration, ARM64-compatible builds,
-   persistent volume layout, health checks, and rollback commands.
+7. Build and validate the Podman images on the ARM64 VM; then install the
+   Quadlet units, configure Caddy persistence, and test rollback.
 8. Configure a free domain/DNS when available:
 
 ```text
@@ -290,6 +293,7 @@ staging.example-domain → staging
 
 ```text
 a86e9e9 ci: ignore generated pnpm lock formatting
+92cb834 feat(infra): add ARM64 Podman deployment scaffold
 f6b86a7 ci: add production dependency audit
 d4bf31e chore: enforce repository quality gates
 0468180 feat(backend): harden Spotify cache and rate limits
