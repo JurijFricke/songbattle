@@ -2,12 +2,20 @@ import type { Song } from "@songbattle/contracts";
 
 export const allowedBracketSizes = [16, 32, 64, 128, 256] as const;
 
+const at = <T>(items: readonly T[], index: number): T => {
+  const value = items[index];
+  if (value === undefined) {
+    throw new RangeError(`Bracket index ${index} is out of range.`);
+  }
+  return value;
+};
+
 const shuffle = <T>(items: readonly T[]): T[] => {
   const result = [...items];
   for (let index = result.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(Math.random() * (index + 1));
-    const current = result[index]!;
-    const swap = result[swapIndex]!;
+    const current = at(result, index);
+    const swap = at(result, swapIndex);
     result[index] = swap;
     result[swapIndex] = current;
   }

@@ -26,6 +26,13 @@ export default tseslint.config(
     },
   },
   {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/no-explicit-any": "error",
+    },
+  },
+  {
     files: ["apps/frontend/**/*.{ts,tsx}"],
     languageOptions: {
       globals: globals.browser,

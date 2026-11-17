@@ -137,8 +137,8 @@ export class SpotifyClient {
 
       const fallbackDelay = 2 ** (attempt - 1) * 500;
       const retryDelay = Math.min(
-        Number.isFinite(retryAfterSeconds)
-          ? retryAfterSeconds! * 1000
+        retryAfterSeconds !== undefined && Number.isFinite(retryAfterSeconds)
+          ? retryAfterSeconds * 1000
           : fallbackDelay,
         config.spotifyMaxRetryDelayMs,
       );

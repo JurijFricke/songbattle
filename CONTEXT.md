@@ -19,6 +19,54 @@ TokenEconomizer is installed globally for OpenCode at
 `loopguard=nudge` enabled globally. OpenCode tool pruning is currently
 unavailable on this host.
 
+## Model selection and switching
+
+Chosen 2026-11-17 while the Copilot Student quota was exhausted (200 AI credits
+reset on 2026-12-01, additional usage deliberately not enabled).
+
+```text
+primary     opencode/glm-5.3-flash-free
+escalation  opencode/hy4-flash-free
+vision      opencode/nemotron-3.5-super-vl-free
+offline     ollama/gemma4:12b
+```
+
+Rationale: the repository is 90 files, 41 TypeScript files, 2,523 TS LOC, and
+the largest file is 405 lines. The entire source fits in a single context
+window, so long-context capability is not the binding constraint. The binding
+constraint is precision under the strict TypeScript configuration
+(`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`)
+combined with the zero-escape-hatch lint invariant. GLM-5.3 is coding-tuned for
+agentic repo editing and exposes the same low/high/max effort ladder, so prompts
+transfer unchanged. `hy4-flash-free` is six weeks newer and is kept for design
+and cross-layer debugging rather than routine edits.
+
+### Handoff protocol for any model
+
+Any model taking over must:
+
+1. Read this file before touching code; it is the authoritative state record.
+2. Work on `dev`, never `main`.
+3. Never weaken `tsconfig.base.json` strictness, ESLint rules, or the CI gate.
+4. Never introduce `!`, `as any`, `@ts-ignore`, or `@ts-expect-error`; both
+   rules are now CI-enforced errors.
+5. Run `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and
+   `pnpm build` before every commit.
+6. Never commit `.env` or print Spotify credentials.
+7. Update this file in the same commit as any meaningful state change.
+
+### Optional A/B probe
+
+To re-test the model choice, run the identical prompt on both candidates:
+
+> Add `GET /api/stats/leaderboard?limit=N` returning the top N songs by vote
+> count. Reuse the repository layer, add a Zod schema in `packages/contracts`,
+> add a route test, and make `pnpm typecheck && pnpm test` pass. Do not modify
+> existing tests.
+
+Score: passes without human edit, tool calls used, and whether any escape
+hatch was introduced.
+
 ## Oracle VM access
 
 VM address:
@@ -212,6 +260,16 @@ packages/contracts
   Quadlet generator but remain `inactive` and not `enabled`, so nothing starts
   on boot and nothing is exposed.
 - CI run `44067149685` passed on `86e7af5` (35s) after the relocation.
+- Strict-TypeScript escape hatches are now lint-enforced errors:
+  `@typescript-eslint/no-non-null-assertion` and
+  `@typescript-eslint/no-explicit-any`. This matters because free-tier models
+  default to `!` and `as any` to silence `noUncheckedIndexedAccess` and
+  `exactOptionalPropertyTypes`.
+- The three pre-existing non-null assertions were removed properly:
+  `domain/bracket.ts` uses a total `at()` accessor that throws `RangeError` on an
+  impossible index, and `spotify/client.ts` narrows `retryAfterSeconds` with an
+  explicit `!== undefined` check before `Number.isFinite`. No rule was
+  suppressed, no assertion remains.
 
 ### Verified commands
 
@@ -285,27 +343,25 @@ With local backend `.env` credentials configured (never commit or share them):
 4. Add deterministic mocked browser E2E coverage alongside the real integration
    flow test; the current Playwright test uses the local Spotify credentials and
    the public playlist fixture.
-5. Add deterministic mocked browser E2E coverage alongside the real integration
-   flow test; the current Playwright test uses the local Spotify credentials and
-   the public playlist fixture.
-6. Run dependency/security audits and reduce the temporary pnpm build-script
-   allowlist after the old CRA dependency tree is fully gone.
-7. Build and validate the Podman images on the ARM64 VM; then install the
-   Quadlet units, configure Caddy persistence, and test rollback.
-8. Configure a free domain/DNS when available:
+5. Reduce the temporary pnpm build-script allowlist now that the old CRA
+   dependency tree is gone.
+6. Images are already built and tagged `:latest` on the VM. Remaining: create
+   `production.env` with real credentials, start the Quadlet units, verify Caddy
+   persistence and the API health path, then test rollback.
+7. Configure a free domain/DNS when available:
 
 ```text
 example-domain → production
 staging.example-domain → staging
 ```
 
-9. Configure staging on the VM with separate SQLite/cache data, then validate
+8. Configure staging on the VM with separate SQLite/cache data, then validate
    deployment from `dev`.
-10. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
-    scheduled SQLite backups plus a tested restore procedure.
-11. Extend GitHub Actions with staging/production deployment after the VM
+9. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
+   scheduled SQLite backups plus a tested restore procedure.
+10. Extend GitHub Actions with staging/production deployment after the VM
     deployment files are validated.
-12. Promote the validated `dev` state to `main`, deploy production, and retain
+11. Promote the validated `dev` state to `main`, deploy production, and retain
     old GitHub repositories until the user explicitly approves retirement.
 
 ## Latest commits on active dev
