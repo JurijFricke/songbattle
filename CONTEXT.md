@@ -14,6 +14,11 @@ git status --short --branch
 
 Continue on `dev`, not `main`.
 
+TokenEconomizer is installed globally for OpenCode at
+`C:\Users\jurij\tools\TokenEconomizer`, with `microskills=envfacts` and
+`loopguard=nudge` enabled globally. OpenCode tool pruning is currently
+unavailable on this host.
+
 ## Oracle VM access
 
 VM address:
@@ -52,7 +57,7 @@ credentials in this file.
 - Cache policy: database-backed cache, bounded Spotify refresh, rate limits, and max cache size; hybrid threshold/periodic policy remains to be finalized.
 - Package manager: pnpm workspaces.
 - VM runtime: rootless Podman with systemd/Quadlet and Caddy; Docker was only temporary.
-- CI preference: `dev` should validate/deploy staging; `main` should deploy production after approval. Exact GitHub Actions workflow still remains to be implemented.
+- CI preference: `dev` should validate/deploy staging; `main` should deploy production after approval. Quality-gate GitHub Actions CI is implemented; deployment workflows remain.
 - History archive branch names accepted:
   - `archive/frontend-main`
   - `archive/frontend-dev`
@@ -148,6 +153,12 @@ packages/contracts
   structured error handling are present.
 - Backend tests exist for Embed generation, normalization, bracket logic,
   validation, health, and API routes.
+- Battle persistence is hardened with session membership, foreign keys,
+  idempotent votes, transactional statistics, and duplicate cleanup during the
+  `0002_tiny_lord_hawal.sql` migration.
+- Spotify/cache hardening includes bounded 429 retries, Retry-After
+  propagation, single-flight refreshes, cache TTL cleanup, and cache-size
+  pruning.
 
 ### Frontend
 
@@ -170,6 +181,8 @@ packages/contracts
 - Frontend tests exist for the Spotify player, start form, and API response
   validation.
 - Active Netlify configuration removed; old config remains in archive sources.
+- Root ESLint flat configuration, Prettier enforcement, contracts typechecking,
+  and GitHub Actions CI are active.
 
 ### Verified commands
 
@@ -182,6 +195,12 @@ pnpm --filter @songbattle/backend build
 pnpm --filter @songbattle/frontend typecheck
 pnpm --filter @songbattle/frontend test
 pnpm --filter @songbattle/frontend build
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm --filter @songbattle/frontend test:e2e
 ```
 
 Frontend modernization scan currently reports zero deterministic findings:
@@ -210,7 +229,6 @@ With local backend `.env` credentials configured (never commit or share them):
 - The first repeated playlist request returns a different song order by design;
   bracket selection is randomized while source data is cached.
 - Manual keyboard, screen-reader, mobile, and cross-browser testing remains.
-- No ESLint/format enforcement or CI workflow has been added yet.
 - Vite builds emit non-fatal upstream Rollup warnings about annotation comments
   in Zod’s distributed source.
 - The root build/test scripts currently use `--if-present`; the final CI gate
@@ -238,33 +256,35 @@ With local backend `.env` credentials configured (never commit or share them):
 4. Add deterministic mocked browser E2E coverage alongside the real integration
    flow test; the current Playwright test uses the local Spotify credentials and
    the public playlist fixture.
-5. Add ESLint/Prettier enforcement and make root `typecheck`, `test`, `build`,
-   and `format:check` fail when an app is missing a required script.
-6. Resolve remaining API/data-model issues: vote idempotency, foreign keys,
-   session validation, stats semantics, cache eviction/max-size enforcement,
-   Spotify 429 backoff, and clear playlist error messages.
-7. Run dependency/security audits and reduce the temporary pnpm build-script
+5. Add deterministic mocked browser E2E coverage alongside the real integration
+   flow test; the current Playwright test uses the local Spotify credentials and
+   the public playlist fixture.
+6. Run dependency/security audits and reduce the temporary pnpm build-script
    allowlist after the old CRA dependency tree is fully gone.
-8. Add Podman Quadlet units, Caddy configuration, ARM64-compatible builds,
+7. Add Podman Quadlet units, Caddy configuration, ARM64-compatible builds,
    persistent volume layout, health checks, and rollback commands.
-9. Configure a free domain/DNS when available:
+8. Configure a free domain/DNS when available:
 
 ```text
 example-domain → production
 staging.example-domain → staging
 ```
 
-10. Configure staging on the VM with separate SQLite/cache data, then validate
-    deployment from `dev`.
-11. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
-    scheduled SQLite backups plus a tested restore procedure.
-12. Configure GitHub Actions for checks and staging/production deployment.
-13. Promote the validated `dev` state to `main`, deploy production, and retain
-    old GitHub repositories until the user explicitly approves retirement.
+9. Configure staging on the VM with separate SQLite/cache data, then validate
+     deployment from `dev`.
+10. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
+     scheduled SQLite backups plus a tested restore procedure.
+11. Extend GitHub Actions with staging/production deployment after the VM
+    deployment files are validated.
+12. Promote the validated `dev` state to `main`, deploy production, and retain
+     old GitHub repositories until the user explicitly approves retirement.
 
 ## Latest commits on active dev
 
 ```text
+d4bf31e chore: enforce repository quality gates
+0468180 feat(backend): harden Spotify cache and rate limits
+1937a18 feat(backend): harden battle session persistence
 d6a3b88 docs: add project continuation context
 97445d4 fix(backend): use current Spotify playlist items endpoint
 3607a5c test(frontend): add UI and API client coverage
