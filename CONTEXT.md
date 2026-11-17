@@ -1,7 +1,8 @@
 # SongBattle Continuation Context
 
-Updated after Step 14C. This file contains decisions, verified progress, known
-limitations, and the next execution sequence. It contains no secrets.
+Updated at session close, 2026-11-17, after commit `7bb4e54`. This file contains
+decisions, verified progress, known limitations, and the next execution
+sequence. It contains no secrets.
 
 ## Resume immediately
 
@@ -122,7 +123,10 @@ Active repository:
 C:\Users\jurij\projects\songbattle
 ```
 
-Current branch is `dev`; working tree was clean at this checkpoint.
+Current branch is `dev`; working tree is clean and level with `origin/dev` at
+`7bb4e54`. CI passed on that commit; the VM checkout was fast-forwarded to it.
+Nothing is running or exposed on the VM; no Quadlet unit is started or enabled.
+The next session resumes at step 1 of "Next steps" below.
 
 Branches:
 
@@ -398,18 +402,16 @@ staging.example-domain → staging
 ## Latest commits on active dev
 
 ```text
-a86e9e9 ci: ignore generated pnpm lock formatting
-92cb834 feat(infra): add ARM64 Podman deployment scaffold
-f6b86a7 ci: add production dependency audit
-d4bf31e chore: enforce repository quality gates
-92cb834 feat(infra): add ARM64 Podman deployment scaffold
+7bb4e54 test(backend): real-SQLite integration suite; fix Express error handler arity
+65f7fe4 chore(lint): forbid non-null assertions and explicit any
+adfde9d docs: record retagged images and green CI
+86e7af5 docs: record VM path relocation
+ad58b33 chore(infra): move VM checkout to ~/projects/songbattle
+b142796 docs: record ARM64 image validation
 d03cc82 fix(infra): qualify Caddy image registry
-0468180 feat(backend): harden Spotify cache and rate limits
-1937a18 feat(backend): harden battle session persistence
-d6a3b88 docs: add project continuation context
-97445d4 fix(backend): use current Spotify playlist items endpoint
-3607a5c test(frontend): add UI and API client coverage
-536777d feat(frontend): modernize responsive and accessible UI
-b61d680 feat(frontend): migrate CRA to Vite and Spotify Embeds
-abe1885 test(backend): cover API validation routes
+71029c2 docs: record deployment scaffold
+92cb834 feat(infra): add ARM64 Podman deployment scaffold
+7086832 docs: record green CI run
+6b73ffa test(backend): initialize database in route tests
+1ca0dd3 docs: record CI formatting fix
 ```
