@@ -193,6 +193,9 @@ packages/contracts
 - ARM64 Podman deployment scaffolding is committed under `infra/`, including
   multi-stage Node/Caddy images, Caddy routing, production env template, and
   rootless Quadlet units. It is not activated on the VM yet.
+- ARM64 image validation passed on the Oracle VM: `songbattle-api:dev` and
+  `songbattle-web:dev` built successfully. The VM checkout is
+  `/home/ubuntu/songbattle`; no services were started.
 
 ### Verified commands
 
@@ -296,6 +299,8 @@ a86e9e9 ci: ignore generated pnpm lock formatting
 92cb834 feat(infra): add ARM64 Podman deployment scaffold
 f6b86a7 ci: add production dependency audit
 d4bf31e chore: enforce repository quality gates
+92cb834 feat(infra): add ARM64 Podman deployment scaffold
+d03cc82 fix(infra): qualify Caddy image registry
 0468180 feat(backend): harden Spotify cache and rate limits
 1937a18 feat(backend): harden battle session persistence
 d6a3b88 docs: add project continuation context
