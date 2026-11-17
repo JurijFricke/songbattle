@@ -273,13 +273,13 @@ staging.example-domain → staging
 ```
 
 9. Configure staging on the VM with separate SQLite/cache data, then validate
-     deployment from `dev`.
+   deployment from `dev`.
 10. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
-     scheduled SQLite backups plus a tested restore procedure.
+    scheduled SQLite backups plus a tested restore procedure.
 11. Extend GitHub Actions with staging/production deployment after the VM
     deployment files are validated.
 12. Promote the validated `dev` state to `main`, deploy production, and retain
-     old GitHub repositories until the user explicitly approves retirement.
+    old GitHub repositories until the user explicitly approves retirement.
 
 ## Latest commits on active dev
 
