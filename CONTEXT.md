@@ -183,6 +183,8 @@ packages/contracts
 - Active Netlify configuration removed; old config remains in archive sources.
 - Root ESLint flat configuration, Prettier enforcement, contracts typechecking,
   and GitHub Actions CI are active.
+- Production dependency audit is clean after upgrading Drizzle ORM to the
+  patched `>=0.45.2` line.
 
 ### Verified commands
 
