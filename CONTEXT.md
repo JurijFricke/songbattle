@@ -27,6 +27,25 @@ commits behind `dev` as of 2026-11-19) kept for history; it does not contain the
 current tooling, which is why the commands below do not exist there. `main` is
 promoted deliberately at release time, never used for development.
 
+### First clone on a new machine
+
+`git clone` checks out the repository default branch, which is `main`. That
+branch has no `resume`/`checkpoint` scripts, so `pnpm resume` fails with
+"Command not found" on a brand-new clone. Switch to `dev` first:
+
+```bash
+git clone git@github.com:JurijFricke/songbattle.git
+cd songbattle
+git switch dev
+nvm install && nvm use   # macOS; .nvmrc pins 26.13.1
+corepack enable          # provides pnpm@12.18.0
+pnpm install
+pnpm resume
+```
+
+`apps/backend/.env` is machine-local and git-ignored by design: copy it from the
+other machine once, never commit it.
+
 If you see this, it is a branch or directory mistake — not a missing command:
 
 ```text
@@ -513,6 +532,7 @@ d03cc82 fix(infra): qualify Caddy image registry
 
 ## Checkpoint log
 
+- 2026-11-18 23:52 UTC — dev — docs: fix new-clone instructions (clone lands on main)
 - 2026-11-18 23:51 UTC — dev — fix(tooling): refuse resume on main branch
 - 2026-11-18 23:46 UTC — dev — fix(tooling): make resume/checkpoint directory-independent
 - 2026-11-18 23:31 UTC — dev — fix(tooling): avoid shell deprecation in checkpoint scripts
