@@ -40,11 +40,14 @@ git switch dev
 nvm install && nvm use   # macOS; .nvmrc pins 26.13.1
 corepack enable          # provides pnpm@12.18.0
 pnpm install
+pnpm --filter @songbattle/frontend exec playwright install chromium  # browser binary, not part of install
 pnpm resume
 ```
 
 `apps/backend/.env` is machine-local and git-ignored by design: copy it from the
-other machine once, never commit it.
+other machine once, never commit it. Every gate step except `test:e2e` passes on
+a fresh clone with no `.env` at all — verified 2026-11-19 by cloning to a clean
+directory, `pnpm install --frozen-lockfile`, then `typecheck`/`test`/`build`.
 
 If you see this, it is a branch or directory mistake — not a missing command:
 
@@ -437,6 +440,12 @@ pnpm build
 pnpm --filter @songbattle/frontend test:e2e
 ```
 
+`test:e2e` is the one step that needs machine-local state: Playwright downloads
+its browser binary outside `node_modules`, so a fresh clone must run
+`pnpm --filter @songbattle/frontend exec playwright install chromium` once, and
+the real-playlist spec additionally needs `apps/backend/.env` with Spotify
+credentials plus network access. Everything else is hermetic.
+
 Frontend modernization scan currently reports zero deterministic findings:
 
 ```text
@@ -532,6 +541,7 @@ d03cc82 fix(infra): qualify Caddy image registry
 
 ## Checkpoint log
 
+- 2026-11-18 23:56 UTC — dev — docs: document playwright browser install and fresh-clone verification
 - 2026-11-18 23:52 UTC — dev — docs: fix new-clone instructions (clone lands on main)
 - 2026-11-18 23:51 UTC — dev — fix(tooling): refuse resume on main branch
 - 2026-11-18 23:46 UTC — dev — fix(tooling): make resume/checkpoint directory-independent
