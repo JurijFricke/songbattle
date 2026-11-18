@@ -1,24 +1,67 @@
 # SongBattle Continuation Context
 
-Updated at session close, 2026-11-17, after commit `7bb4e54`. This file contains
-decisions, verified progress, known limitations, and the next execution
-sequence. It contains no secrets.
+Living document, updated on every checkpoint. Last structural update
+2026-11-19; the authoritative "where am I" marker is the `## Checkpoint log`
+at the end of this file. It contains no secrets.
 
 ## Resume immediately
 
+Any machine, one command:
+
+```bash
+pnpm resume
+```
+
+It fetches, refuses to continue on a dirty tree, fast-forwards `dev`, and
+installs dependencies only when the lockfile changed. Manual equivalent:
+
 ```powershell
+# Windows
 cd C:\Users\jurij\projects\songbattle
-nvm use 26.13.1
+nvm use 26.13.1          # .nvmrc pins 26.13.1
+git pull --ff-only
 pnpm install
 git status --short --branch
 ```
 
-Continue on `dev`, not `main`.
+```bash
+# macOS (brew nvm or fnm; .nvmrc is read automatically)
+cd ~/projects/songbattle
+nvm install && nvm use   # or: fnm use
+corepack enable          # provides the pinned pnpm@12.18.0
+git pull --ff-only
+pnpm install
+git status --short --branch
+```
+
+Continue on `dev`, never `main`.
+
+## Cross-machine workflow (Windows at home, macOS on the go)
+
+Both machines are first-class checkouts of the same `dev` branch. The rules
+that keep them from diverging:
+
+1. **Start** with `pnpm resume`. Never start work on a stale tree.
+2. **End any work unit** with `pnpm checkpoint "type(scope): message"`. It runs
+   the full gate (`format:check`, `lint`, `typecheck`, `test`, `build`), appends
+   a timestamped entry to `## Checkpoint log` in this file, commits everything
+   including that entry, pushes, and verifies the tree is clean and level with
+   the remote. It refuses to run on `main`.
+3. **Never leave a session with an uncommitted or unpushed tree.** `pnpm resume`
+   deliberately refuses a dirty checkout, which makes the rule observable.
+4. `.gitattributes` normalizes every text file to LF. Without it, Windows
+   `core.autocrlf` and macOS defaults produce phantom diffs on every file when
+   switching machines.
+5. `.nvmrc` pins Node `26.13.1`; `packageManager` pins `pnpm@12.18.0`, so both
+   machines resolve identical toolchains via Corepack.
+6. `apps/backend/.env` is machine-local and git-ignored by design; copy it once
+   per machine, never commit it.
 
 TokenEconomizer is installed globally for OpenCode at
-`C:\Users\jurij\tools\TokenEconomizer`, with `microskills=envfacts` and
-`loopguard=nudge` enabled globally. OpenCode tool pruning is currently
-unavailable on this host.
+`C:\Users\jurij\tools\TokenEconomizer` (Windows only), with
+`microskills=envfacts` and `loopguard=nudge` enabled globally. OpenCode tool
+pruning is currently unavailable on this host. The macOS checkout does not need
+it.
 
 ## Model selection and switching
 
@@ -52,7 +95,9 @@ Any model taking over must:
 4. Never introduce `!`, `as any`, `@ts-ignore`, or `@ts-expect-error`; both
    rules are now CI-enforced errors.
 5. Run `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and
-   `pnpm build` before every commit.
+   `pnpm build` before every commit — or use `pnpm checkpoint "type(scope):
+message"`, which runs all five, updates the checkpoint log here, commits, and
+   pushes in one step. Never end a session with an unpushed tree.
 6. Never commit `.env` or print Spotify credentials.
 7. Update this file in the same commit as any meaningful state change.
 
@@ -415,3 +460,8 @@ d03cc82 fix(infra): qualify Caddy image registry
 6b73ffa test(backend): initialize database in route tests
 1ca0dd3 docs: record CI formatting fix
 ```
+
+
+## Checkpoint log
+
+- 2026-11-18 23:31 UTC — dev — chore: add cross-machine checkpoint workflow

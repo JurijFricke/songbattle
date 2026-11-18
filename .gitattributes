@@ -1,0 +1,15 @@
+# Normalize line endings across Windows, macOS, and Linux checkouts.
+# Without this, Windows core.autocrlf and macOS defaults drift and produce
+# phantom diffs on every file whenever development switches machines.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff2 binary
+*.pdf binary
+
+pnpm-lock.yaml -diff linguist-generated

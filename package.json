@@ -8,10 +8,12 @@
   },
   "scripts": {
     "build": "pnpm --filter @songbattle/backend build && pnpm --filter @songbattle/frontend build",
+    "checkpoint": "node scripts/checkpoint.mts",
     "dev": "pnpm --parallel --recursive --if-present dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
+    "resume": "node scripts/resume.mts",
     "test": "pnpm --filter @songbattle/backend test && pnpm --filter @songbattle/frontend test",
     "typecheck": "pnpm --filter @songbattle/contracts typecheck && pnpm --filter @songbattle/backend typecheck && pnpm --filter @songbattle/frontend typecheck"
   },
