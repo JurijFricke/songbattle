@@ -8,6 +8,11 @@
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
+import { resolve } from "node:path";
+
+// Anchor to the repository root so the script behaves identically whether it is
+// started from inside the repo, via `pnpm -C <repo>`, or by absolute path.
+process.chdir(resolve(import.meta.dirname, ".."));
 
 const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 

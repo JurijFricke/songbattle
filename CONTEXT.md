@@ -6,13 +6,49 @@ at the end of this file. It contains no secrets.
 
 ## Resume immediately
 
-Any machine, one command:
+The commands live in this repository's `package.json`, so they must run with the
+repository as the package root. Three equivalent forms:
 
 ```bash
-pnpm resume
+# 1. from inside the repo
+cd ~/projects/songbattle && pnpm resume
+
+# 2. from any directory, pointing pnpm at the repo
+pnpm -C ~/projects/songbattle resume
+
+# 3. from any directory, by absolute script path (no pnpm needed)
+node ~/projects/songbattle/scripts/resume.mts
 ```
 
-It fetches, refuses to continue on a dirty tree, fast-forwards `dev`, and
+Windows paths are `C:\Users\jurij\projects\songbattle`.
+
+If you see this, you are not in the package root — it is a directory mistake,
+not a missing command:
+
+```text
+ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL
+  × Command "resume" not found
+```
+
+Both scripts `chdir` to the repository root themselves, so forms 2 and 3 work
+regardless of the current directory. `pnpm checkpoint "..."` has the same
+requirement; from elsewhere use `pnpm -C <repo> checkpoint "..."`.
+
+Optional one-time shortcuts (add to your shell profile, not to the repo):
+
+```powershell
+# Windows: $PROFILE
+function sb { pnpm -C C:\Users\jurij\projects\songbattle @args }
+```
+
+```bash
+# macOS: ~/.zshrc
+sb() { pnpm -C ~/projects/songbattle "$@"; }
+```
+
+Then `sb resume` and `sb checkpoint "feat: message"` work from anywhere.
+
+`resume` fetches, refuses to continue on a dirty tree, fast-forwards `dev`, and
 installs dependencies only when the lockfile changed. Manual equivalent:
 
 ```powershell
@@ -463,5 +499,6 @@ d03cc82 fix(infra): qualify Caddy image registry
 
 ## Checkpoint log
 
+- 2026-11-18 23:46 UTC — dev — fix(tooling): make resume/checkpoint directory-independent
 - 2026-11-18 23:31 UTC — dev — fix(tooling): avoid shell deprecation in checkpoint scripts
 - 2026-11-18 23:31 UTC — dev — chore: add cross-machine checkpoint workflow
