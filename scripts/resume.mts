@@ -29,15 +29,16 @@ const run = (
   }
 };
 
-// Node 24+ refuses to spawn .cmd shims without a shell on Windows.
+// Node 24+ refuses to spawn .cmd shims without a shell on Windows. Calling
+// cmd.exe directly avoids both that restriction and the DEP0190 warning that
+// `shell: true` produces.
 const runPnpm = (
   args: readonly string[],
   options: { capture?: boolean } = {},
-) =>
-  run(pnpmCommand, args, {
-    ...options,
-    shell: process.platform === "win32",
-  });
+): string =>
+  process.platform === "win32"
+    ? run("cmd.exe", ["/d", "/s", "/c", pnpmCommand, ...args], options)
+    : run(pnpmCommand, args, options);
 
 const main = (): void => {
   console.log("=== git fetch ===");

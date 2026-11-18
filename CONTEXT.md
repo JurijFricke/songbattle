@@ -461,7 +461,7 @@ d03cc82 fix(infra): qualify Caddy image registry
 1ca0dd3 docs: record CI formatting fix
 ```
 
-
 ## Checkpoint log
 
+- 2026-11-18 23:31 UTC — dev — fix(tooling): avoid shell deprecation in checkpoint scripts
 - 2026-11-18 23:31 UTC — dev — chore: add cross-machine checkpoint workflow
