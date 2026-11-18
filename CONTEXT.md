@@ -22,13 +22,27 @@ node ~/projects/songbattle/scripts/resume.mts
 
 Windows paths are `C:\Users\jurij\projects\songbattle`.
 
-If you see this, you are not in the package root — it is a directory mistake,
-not a missing command:
+**Always work on `dev`.** `main` is the pre-migration baseline (`9fdcd90`, 41
+commits behind `dev` as of 2026-11-19) kept for history; it does not contain the
+current tooling, which is why the commands below do not exist there. `main` is
+promoted deliberately at release time, never used for development.
+
+If you see this, it is a branch or directory mistake — not a missing command:
 
 ```text
 ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL
   × Command "resume" not found
 ```
+
+Diagnose in this order:
+
+```bash
+git branch --show-current   # main?  → git switch dev, then pnpm resume
+pwd                         # outside the repo? → use form 2 or 3 above
+```
+
+`resume` refuses to run on `main` and prints the fix, so a stale baseline can
+never be mistaken for a ready checkout.
 
 Both scripts `chdir` to the repository root themselves, so forms 2 and 3 work
 regardless of the current directory. `pnpm checkpoint "..."` has the same
@@ -499,6 +513,7 @@ d03cc82 fix(infra): qualify Caddy image registry
 
 ## Checkpoint log
 
+- 2026-11-18 23:51 UTC — dev — fix(tooling): refuse resume on main branch
 - 2026-11-18 23:46 UTC — dev — fix(tooling): make resume/checkpoint directory-independent
 - 2026-11-18 23:31 UTC — dev — fix(tooling): avoid shell deprecation in checkpoint scripts
 - 2026-11-18 23:31 UTC — dev — chore: add cross-machine checkpoint workflow

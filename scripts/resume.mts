@@ -52,6 +52,31 @@ const main = (): void => {
   const branch = run("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
     capture: true,
   });
+  console.log(`branch: ${branch}`);
+
+  if (branch === "main") {
+    console.error(
+      [
+        "",
+        "Refusing to resume on main.",
+        "",
+        "main is the pre-migration baseline kept for history. It is many",
+        "commits behind dev and does not contain the current tooling",
+        '(which is why `pnpm resume` reported "Command not found").',
+        "",
+        "Fix:",
+        "  git switch dev",
+        "  pnpm resume",
+        "",
+      ].join("\n"),
+    );
+    process.exit(1);
+  }
+  if (branch !== "dev") {
+    console.log(
+      `Warning: on branch "${branch}" instead of dev. Continuing because it is not main.`,
+    );
+  }
   const dirty = run("git", ["status", "--porcelain"], { capture: true });
   if (dirty !== "") {
     console.error(
