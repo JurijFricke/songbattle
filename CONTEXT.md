@@ -22,6 +22,19 @@ node ~/projects/songbattle/scripts/resume.mts
 
 Windows paths are `C:\Users\jurij\projects\songbattle`.
 
+### State at handoff
+
+- `dev` is clean, pushed, and the VM checkout tracks the same commit.
+- The full gate passes: format, lint, typecheck, 35 backend tests, 6 frontend
+  unit tests, and build.
+- Both browser suites pass: the hermetic `test:e2e:mock` suite (no backend,
+  `.env`, credentials, or network) and the live `test:e2e` suite.
+- Windows and macOS resume identically. Only `apps/backend/.env` is
+  machine-local; copy it once and never commit it.
+- Next code task: remove the obsolete pnpm build-script allowlist. The first
+  item in "Next steps" is the manual Spotify Embed matrix, which needs a human
+  browser session and cannot be completed by an agent alone.
+
 **Always work on `dev`.** `main` is the pre-migration baseline (`9fdcd90`) kept
 for history. It is many commits behind `dev` and does not contain the current
 tooling, which is why the commands below do not exist there. `main` is promoted
@@ -579,6 +592,7 @@ record of completed work units and is kept current by `pnpm checkpoint`.
 
 ## Checkpoint log
 
+- 2026-11-19 00:32 UTC — dev — docs: add cross-machine resume handoff
 - 2026-11-19 00:29 UTC — dev — test(e2e): add deterministic mocked battle flow
 - 2026-11-19 00:23 UTC — dev — test(e2e): verify match and bracket records in live flow
 - 2026-11-19 00:18 UTC — dev — feat(stats): track bracket wins separately from match records
