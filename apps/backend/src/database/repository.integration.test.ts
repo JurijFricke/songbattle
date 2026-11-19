@@ -178,15 +178,17 @@ describe("battle session persistence", () => {
       expect(stats.wins + stats.losses).toBe(stats.appearances);
     }
 
-    // Other test files sharing the run database also record votes, so the
-    // leaderboard is asserted by dominant record and ordering properties
-    // instead of exact membership.
-    const leaderboard = await getLeaderboard();
-    expect(leaderboard[0]?.songId).toBe(songId(30));
-    expect(leaderboard[0]).toMatchObject({
+    // Other test files sharing the run database also record votes and complete
+    // sessions, so the leaderboard is asserted by dominant record and ordering
+    // properties instead of exact membership.
+    const leaderboard = await getLeaderboard(100);
+    const dominant = leaderboard.find((entry) => entry.songId === songId(30));
+    expect(dominant).toMatchObject({
       wins: 5,
       losses: 0,
       appearances: 5,
+      bracketWins: 0,
+      bracketAppearances: 0,
     });
     const leaderboardIds = leaderboard.map((entry) => entry.songId);
     for (const number of [31, 32, 33, 34, 35]) {
@@ -198,7 +200,10 @@ describe("battle session persistence", () => {
       expect(previous).toBeDefined();
       expect(current).toBeDefined();
       if (!previous || !current) continue;
-      expect(previous.wins).toBeGreaterThanOrEqual(current.wins);
+      expect(previous.bracketWins).toBeGreaterThanOrEqual(current.bracketWins);
+      if (previous.bracketWins === current.bracketWins) {
+        expect(previous.wins).toBeGreaterThanOrEqual(current.wins);
+      }
     }
   });
 
@@ -263,6 +268,15 @@ describe("battle session persistence", () => {
     await expect(
       completeBattleSession(sessionId, songId(50)),
     ).resolves.toBeUndefined();
+    await expect(getSongStats(songId(50))).resolves.toMatchObject({
+      bracketWins: 1,
+      bracketAppearances: 1,
+    });
+    await expect(getSongStats(songId(51))).resolves.toMatchObject({
+      bracketWins: 0,
+      bracketAppearances: 1,
+    });
+
     await expect(
       completeBattleSession(sessionId, songId(50)),
     ).resolves.toBeUndefined();
@@ -271,6 +285,10 @@ describe("battle session persistence", () => {
     ).rejects.toMatchObject({
       status: 409,
       message: expect.stringContaining("already complete"),
+    });
+    await expect(getSongStats(songId(50))).resolves.toMatchObject({
+      bracketWins: 1,
+      bracketAppearances: 1,
     });
 
     await expect(

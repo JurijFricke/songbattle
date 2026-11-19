@@ -108,6 +108,8 @@ export const songStats = sqliteTable(
     wins: integer("wins").notNull().default(0),
     losses: integer("losses").notNull().default(0),
     appearances: integer("appearances").notNull().default(0),
+    bracketWins: integer("bracket_wins").notNull().default(0),
+    bracketAppearances: integer("bracket_appearances").notNull().default(0),
     updatedAt: integer("updated_at").notNull(),
   },
   (table) => [primaryKey({ columns: [table.songId] })],

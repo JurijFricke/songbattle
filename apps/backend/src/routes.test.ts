@@ -171,6 +171,8 @@ describe("API routes", () => {
         wins: 2,
         losses: 0,
         appearances: 2,
+        bracketWins: 1,
+        bracketAppearances: 1,
         winRate: 1,
       });
     });
@@ -211,6 +213,8 @@ describe("API routes", () => {
         wins: 2,
         losses: 0,
         appearances: 2,
+        bracketWins: 1,
+        bracketAppearances: 1,
         winRate: 1,
       });
     });

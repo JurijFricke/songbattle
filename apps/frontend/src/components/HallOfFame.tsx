@@ -35,7 +35,7 @@ const HallOfFame = () => {
 
   return (
     <div className={styles.container}>
-      <h2>Hall of Fame - Top 10 Winners</h2>
+      <h2>Hall of Fame - Top 10 by Brackets Won</h2>
       <ol className={styles.leaderboardList}>
         {leaderboard.map((entry, index) => (
           <li key={entry.songId}>
@@ -44,7 +44,11 @@ const HallOfFame = () => {
               <span className={styles.title}>{entry.title}</span>
               <span className={styles.artist}>{entry.artists.join(", ")}</span>
             </div>
-            <span className={styles.wins}>{entry.wins} Wins</span>
+            <span className={styles.wins}>
+              {entry.bracketWins}{" "}
+              {entry.bracketWins === 1 ? "bracket" : "brackets"} · {entry.wins}{" "}
+              match wins
+            </span>
           </li>
         ))}
       </ol>

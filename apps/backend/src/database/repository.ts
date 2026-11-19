@@ -1,5 +1,5 @@
-import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
-import type { Song } from "@songbattle/contracts";
+import { and, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
+import type { LeaderboardEntry, Song } from "@songbattle/contracts";
 import { db } from "./client.js";
 import { config } from "../config.js";
 import {
@@ -372,55 +372,84 @@ export const completeBattleSession = async (
   sessionId: string,
   winnerSongId: string,
 ): Promise<void> => {
-  const sessionRows = await db
-    .select({
-      completedAt: battleSessions.completedAt,
-      winnerSongId: battleSessions.winnerSongId,
-    })
-    .from(battleSessions)
-    .where(eq(battleSessions.id, sessionId))
-    .limit(1);
-  const session = sessionRows[0];
-  if (!session) throw new BattleVoteError(404, "Battle session was not found.");
-  if (session.completedAt !== null) {
-    if (session.winnerSongId !== winnerSongId) {
+  await db.transaction(async (transaction) => {
+    const sessionRows = await transaction
+      .select({
+        completedAt: battleSessions.completedAt,
+        winnerSongId: battleSessions.winnerSongId,
+      })
+      .from(battleSessions)
+      .where(eq(battleSessions.id, sessionId))
+      .limit(1);
+    const session = sessionRows[0];
+    if (!session)
+      throw new BattleVoteError(404, "Battle session was not found.");
+    if (session.completedAt !== null) {
+      if (session.winnerSongId !== winnerSongId) {
+        throw new BattleVoteError(
+          409,
+          "This battle session is already complete with a different winner.",
+        );
+      }
+      return;
+    }
+
+    const sessionSongs = await transaction
+      .select({ songId: battleSessionSongs.songId })
+      .from(battleSessionSongs)
+      .where(eq(battleSessionSongs.sessionId, sessionId));
+    if (!sessionSongs.some(({ songId }) => songId === winnerSongId)) {
+      throw new BattleVoteError(
+        409,
+        "The winning song must belong to this battle session.",
+      );
+    }
+
+    const timestamp = now();
+    const completedRows = await transaction
+      .update(battleSessions)
+      .set({ completedAt: timestamp, winnerSongId })
+      .where(
+        and(
+          eq(battleSessions.id, sessionId),
+          isNull(battleSessions.completedAt),
+        ),
+      )
+      .returning({ id: battleSessions.id });
+
+    if (completedRows.length === 0) {
+      const latestRows = await transaction
+        .select({ winnerSongId: battleSessions.winnerSongId })
+        .from(battleSessions)
+        .where(eq(battleSessions.id, sessionId))
+        .limit(1);
+      if (latestRows[0]?.winnerSongId === winnerSongId) return;
       throw new BattleVoteError(
         409,
         "This battle session is already complete with a different winner.",
       );
     }
-    return;
-  }
-  const sessionSongs = await db
-    .select({ songId: battleSessionSongs.songId })
-    .from(battleSessionSongs)
-    .where(eq(battleSessionSongs.sessionId, sessionId));
-  if (!sessionSongs.some(({ songId }) => songId === winnerSongId)) {
-    throw new BattleVoteError(
-      409,
-      "The winning song must belong to this battle session.",
-    );
-  }
-  await db
-    .update(battleSessions)
-    .set({ completedAt: now(), winnerSongId })
-    .where(
-      and(
-        eq(battleSessions.id, sessionId),
-        sql`${battleSessions.completedAt} IS NULL`,
-      ),
-    );
-};
 
-export interface LeaderboardEntry {
-  songId: string;
-  title: string;
-  artists: string[];
-  wins: number;
-  losses: number;
-  appearances: number;
-  winRate: number;
-}
+    await transaction
+      .insert(songStats)
+      .values(
+        sessionSongs.map(({ songId }) => ({
+          songId,
+          bracketWins: songId === winnerSongId ? 1 : 0,
+          bracketAppearances: 1,
+          updatedAt: timestamp,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: songStats.songId,
+        set: {
+          bracketWins: sql`${songStats.bracketWins} + excluded.bracket_wins`,
+          bracketAppearances: sql`${songStats.bracketAppearances} + excluded.bracket_appearances`,
+          updatedAt: timestamp,
+        },
+      });
+  });
+};
 
 export const getLeaderboard = async (
   limit = 10,
@@ -432,7 +461,11 @@ export const getLeaderboard = async (
     })
     .from(songStats)
     .innerJoin(songs, eq(songStats.songId, songs.id))
-    .orderBy(sql`${songStats.wins} DESC`, sql`${songStats.losses} ASC`)
+    .orderBy(
+      sql`${songStats.bracketWins} DESC`,
+      sql`${songStats.wins} DESC`,
+      sql`${songStats.losses} ASC`,
+    )
     .limit(limit);
 
   return rows.map(({ song, stats }) => ({
@@ -442,6 +475,8 @@ export const getLeaderboard = async (
     wins: stats.wins,
     losses: stats.losses,
     appearances: stats.appearances,
+    bracketWins: stats.bracketWins,
+    bracketAppearances: stats.bracketAppearances,
     winRate: stats.appearances > 0 ? stats.wins / stats.appearances : 0,
   }));
 };
@@ -465,6 +500,8 @@ export const getSongStats = async (
     wins: row.stats.wins,
     losses: row.stats.losses,
     appearances: row.stats.appearances,
+    bracketWins: row.stats.bracketWins,
+    bracketAppearances: row.stats.bracketAppearances,
     winRate:
       row.stats.appearances > 0 ? row.stats.wins / row.stats.appearances : 0,
   };

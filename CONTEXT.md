@@ -434,6 +434,14 @@ packages/contracts
   before the winner screen and statistics load. An in-flight ref prevents
   double submissions; a failed vote or completion leaves the current matchup
   in place so it can be retried.
+- Statistics now distinguish match records from bracket records. `song_stats`
+  has `bracket_wins` and `bracket_appearances`; completing a session increments
+  the champion's bracket win and every session song's bracket appearance
+  exactly once, in the same transaction as completion. Migration `0003`
+  backfills completed sessions from `battle_sessions` and
+  `battle_session_songs`. The leaderboard ranks by bracket wins, then match
+  wins, then losses; the winner card and Hall of Fame label the two records
+  separately.
 
 ### Verified commands
 
@@ -516,7 +524,8 @@ With local backend `.env` credentials configured (never commit or share them):
 ## Next steps, in order
 
 1. Test the complete frontend battle flow using the local Vite proxy:
-   start game → load Embeds → vote → next matchup → winner → stats.
+   start game → load Embeds → vote → next matchup → winner → stats. Verify both
+   the match record and the bracket record.
 2. Test official Spotify Embeds manually while logged out, logged into Free if
    available, and logged into Premium; verify playback, scrubbing, save/like
    behavior, and browser privacy behavior.
@@ -551,6 +560,7 @@ record of completed work units and is kept current by `pnpm checkpoint`.
 
 ## Checkpoint log
 
+- 2026-11-19 00:18 UTC — dev — feat(stats): track bracket wins separately from match records
 - 2026-11-19 00:09 UTC — dev — fix(battle): number matchups globally across rounds
 - 2026-11-18 23:56 UTC — dev — docs: document playwright browser install and fresh-clone verification
 - 2026-11-18 23:52 UTC — dev — docs: fix new-clone instructions (clone lands on main)

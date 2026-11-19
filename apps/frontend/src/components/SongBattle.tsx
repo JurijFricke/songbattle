@@ -229,19 +229,27 @@ const SongBattle = () => {
           {!isWinnerStatsLoading && winnerStats && (
             <dl className={styles.performanceStats}>
               <div>
-                <dt>Wins</dt>
+                <dt>Brackets won</dt>
+                <dd>{winnerStats.bracketWins}</dd>
+              </div>
+              <div>
+                <dt>Bracket appearances</dt>
+                <dd>{winnerStats.bracketAppearances}</dd>
+              </div>
+              <div>
+                <dt>Match wins</dt>
                 <dd>{winnerStats.wins}</dd>
               </div>
               <div>
-                <dt>Losses</dt>
+                <dt>Match losses</dt>
                 <dd>{winnerStats.losses}</dd>
               </div>
               <div>
-                <dt>Appearances</dt>
+                <dt>Match appearances</dt>
                 <dd>{winnerStats.appearances}</dd>
               </div>
               <div>
-                <dt>Win rate</dt>
+                <dt>Match win rate</dt>
                 <dd>{Math.round(winnerStats.winRate * 100)}%</dd>
               </div>
             </dl>

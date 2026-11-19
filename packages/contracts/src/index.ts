@@ -81,6 +81,8 @@ export const leaderboardEntrySchema = z.object({
   wins: z.number().int().nonnegative(),
   losses: z.number().int().nonnegative(),
   appearances: z.number().int().nonnegative(),
+  bracketWins: z.number().int().nonnegative(),
+  bracketAppearances: z.number().int().nonnegative(),
   winRate: z.number().min(0).max(1),
 });
 
@@ -93,6 +95,8 @@ export const songStatsSchema = z.object({
   wins: z.number().int().nonnegative(),
   losses: z.number().int().nonnegative(),
   appearances: z.number().int().nonnegative(),
+  bracketWins: z.number().int().nonnegative(),
+  bracketAppearances: z.number().int().nonnegative(),
   winRate: z.number().min(0).max(1),
 });
 
