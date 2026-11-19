@@ -451,6 +451,14 @@ packages/contracts
   and checks that the champion gained exactly one bracket win, one bracket
   appearance, four match wins, and four match appearances. The run passed on
   2026-11-19 in 17.4 seconds against the public playlist fixture.
+- A deterministic mocked Playwright spec (`test:e2e:mock`) runs the same
+  16-song flow with no backend, Spotify credentials, or network. It serves
+  `/api/songs`, `/api/votes`, completion, and both stats routes from an
+  in-memory fake that rejects duplicate matchup numbers, and fulfills Embed
+  requests with local HTML. The spec asserts the exact 15 global matchup
+  numbers, a single completion, the champion's 4/0/4 match record, the
+  runner-up's 3/1/4 record, both bracket records, and the rendered labels. It
+  passed in 13.7 seconds on 2026-11-19.
 
 ### Verified commands
 
@@ -469,13 +477,15 @@ pnpm typecheck
 pnpm test
 pnpm build
 pnpm --filter @songbattle/frontend test:e2e
+pnpm --filter @songbattle/frontend test:e2e:mock
 ```
 
-`test:e2e` is the one step that needs machine-local state: Playwright downloads
-its browser binary outside `node_modules`, so a fresh clone must run
-`pnpm --filter @songbattle/frontend exec playwright install chromium` once, and
-the real-playlist spec additionally needs `apps/backend/.env` with Spotify
-credentials plus network access. Everything else is hermetic.
+Both Playwright specs need the machine-local browser binary: a fresh clone must
+run `pnpm --filter @songbattle/frontend exec playwright install chromium` once.
+`test:e2e:mock` is otherwise hermetic: it needs no backend, `.env`, credentials,
+or network. `test:e2e` is the real-playlist spec and additionally needs
+`apps/backend/.env` with Spotify credentials plus network access. Everything
+else is hermetic.
 
 Frontend modernization scan currently reports zero deterministic findings:
 
@@ -532,35 +542,34 @@ With local backend `.env` credentials configured (never commit or share them):
 
 ## Next steps, in order
 
-The complete local frontend flow is now covered by the live Playwright test
-(`pnpm --filter @songbattle/frontend test:e2e`), which verifies that a 16-song
-champion gains four match wins and one bracket win.
+The complete local frontend flow is covered twice: the live Playwright test
+(`pnpm --filter @songbattle/frontend test:e2e`) uses the real playlist and
+credentials, while `pnpm --filter @songbattle/frontend test:e2e:mock` runs
+hermetically against an in-memory API. Both verify that a 16-song champion
+gains four match wins and one bracket win.
 
 1. Test official Spotify Embeds manually while logged out, logged into Free if
    available, and logged into Premium; verify playback, scrubbing, save/like
    behavior, and browser privacy behavior.
-2. Add deterministic mocked browser E2E coverage alongside the real integration
-   flow test; the current Playwright test uses the local Spotify credentials and
-   the public playlist fixture.
-3. Reduce the temporary pnpm build-script allowlist now that the old CRA
+2. Reduce the temporary pnpm build-script allowlist now that the old CRA
    dependency tree is gone.
-4. Images are already built and tagged `:latest` on the VM. Remaining: create
+3. Images are already built and tagged `:latest` on the VM. Remaining: create
    `production.env` with real credentials, start the Quadlet units, verify Caddy
    persistence and the API health path, then test rollback.
-5. Configure a free domain/DNS when available:
+4. Configure a free domain/DNS when available:
 
 ```text
 example-domain → production
 staging.example-domain → staging
 ```
 
-6. Configure staging on the VM with separate SQLite/cache data, then validate
+5. Configure staging on the VM with separate SQLite/cache data, then validate
    deployment from `dev`.
-7. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
+6. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
    scheduled SQLite backups plus a tested restore procedure.
-8. Extend GitHub Actions with staging/production deployment after the VM
+7. Extend GitHub Actions with staging/production deployment after the VM
    deployment files are validated.
-9. Promote the validated `dev` state to `main`, deploy production, and retain
+8. Promote the validated `dev` state to `main`, deploy production, and retain
    old GitHub repositories until the user explicitly approves retirement.
 
 ## Latest commits on active dev
@@ -570,6 +579,7 @@ record of completed work units and is kept current by `pnpm checkpoint`.
 
 ## Checkpoint log
 
+- 2026-11-19 00:29 UTC — dev — test(e2e): add deterministic mocked battle flow
 - 2026-11-19 00:23 UTC — dev — test(e2e): verify match and bracket records in live flow
 - 2026-11-19 00:18 UTC — dev — feat(stats): track bracket wins separately from match records
 - 2026-11-19 00:09 UTC — dev — fix(battle): number matchups globally across rounds

@@ -1,40 +1,12 @@
+import { expect, test } from "@playwright/test";
 import {
-  expect,
-  test,
-  type APIRequestContext,
-  type Page,
-} from "@playwright/test";
+  createEmptyStats,
+  readStats,
+  statValue,
+  type SongStats,
+} from "./helpers";
 
 const playlistUrl = "https://open.spotify.com/playlist/3q9Fh1QK2OMBHh3FIHE7kV";
-
-interface SongStats {
-  wins: number;
-  losses: number;
-  appearances: number;
-  bracketWins: number;
-  bracketAppearances: number;
-}
-
-const emptyStats: SongStats = {
-  wins: 0,
-  losses: 0,
-  appearances: 0,
-  bracketWins: 0,
-  bracketAppearances: 0,
-};
-
-const readStats = async (
-  request: APIRequestContext,
-  songId: string,
-): Promise<SongStats> => {
-  const response = await request.get(`/api/stats/${songId}`);
-  if (response.status() === 404) return emptyStats;
-  expect(response.ok()).toBe(true);
-  return (await response.json()) as SongStats;
-};
-
-const statValue = (page: Page, label: string) =>
-  page.getByText(label, { exact: true }).locator("xpath=following-sibling::dd");
 
 test("plays a complete playlist battle and records match and bracket statistics", async ({
   page,
@@ -92,7 +64,7 @@ test("plays a complete playlist battle and records match and bracket statistics"
   const winnerId = winnerSrc?.match(/\/embed\/track\/([A-Za-z0-9]{22})/)?.[1];
   if (!winnerId) throw new Error("Could not read the winner song ID.");
 
-  const before = baseline.get(winnerId) ?? emptyStats;
+  const before = baseline.get(winnerId) ?? createEmptyStats();
   const after = await readStats(request, winnerId);
 
   expect(after.bracketWins - before.bracketWins).toBe(1);
