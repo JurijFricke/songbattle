@@ -1,9 +1,44 @@
-import { expect, test } from "@playwright/test";
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test";
 
 const playlistUrl = "https://open.spotify.com/playlist/3q9Fh1QK2OMBHh3FIHE7kV";
 
-test("plays a complete playlist battle and persists the winner statistic", async ({
+interface SongStats {
+  wins: number;
+  losses: number;
+  appearances: number;
+  bracketWins: number;
+  bracketAppearances: number;
+}
+
+const emptyStats: SongStats = {
+  wins: 0,
+  losses: 0,
+  appearances: 0,
+  bracketWins: 0,
+  bracketAppearances: 0,
+};
+
+const readStats = async (
+  request: APIRequestContext,
+  songId: string,
+): Promise<SongStats> => {
+  const response = await request.get(`/api/stats/${songId}`);
+  if (response.status() === 404) return emptyStats;
+  expect(response.ok()).toBe(true);
+  return (await response.json()) as SongStats;
+};
+
+const statValue = (page: Page, label: string) =>
+  page.getByText(label, { exact: true }).locator("xpath=following-sibling::dd");
+
+test("plays a complete playlist battle and records match and bracket statistics", async ({
   page,
+  request,
 }) => {
   await page.goto("/");
 
@@ -11,7 +46,26 @@ test("plays a complete playlist battle and persists the winner statistic", async
     page.getByRole("heading", { name: "Song Battle" }),
   ).toBeVisible();
   await page.getByLabel(/spotify playlist url/i).fill(playlistUrl);
+
+  const songsResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === "GET" &&
+      new URL(response.url()).pathname === "/api/songs",
+  );
   await page.getByRole("button", { name: /start battle/i }).click();
+
+  const songsResponse = await songsResponsePromise;
+  expect(songsResponse.ok()).toBe(true);
+  const battle = (await songsResponse.json()) as {
+    sessionId: string;
+    songs: { id: string }[];
+  };
+  expect(battle.songs).toHaveLength(16);
+
+  const baseline = new Map<string, SongStats>();
+  for (const song of battle.songs) {
+    baseline.set(song.id, await readStats(request, song.id));
+  }
 
   const players = page.locator('iframe[title^="Spotify player for"]');
   await expect(players).toHaveCount(2, { timeout: 30_000 });
@@ -31,11 +85,39 @@ test("plays a complete playlist battle and persists the winner statistic", async
   await expect(page.getByRole("heading", { name: "Winner!" })).toBeVisible({
     timeout: 10_000,
   });
-  await expect(page.locator('iframe[title^="Spotify player for"]')).toHaveCount(
-    1,
+
+  const winnerPlayer = page.locator('iframe[title^="Spotify player for"]');
+  await expect(winnerPlayer).toHaveCount(1);
+  const winnerSrc = await winnerPlayer.getAttribute("src");
+  const winnerId = winnerSrc?.match(/\/embed\/track\/([A-Za-z0-9]{22})/)?.[1];
+  if (!winnerId) throw new Error("Could not read the winner song ID.");
+
+  const before = baseline.get(winnerId) ?? emptyStats;
+  const after = await readStats(request, winnerId);
+
+  expect(after.bracketWins - before.bracketWins).toBe(1);
+  expect(after.bracketAppearances - before.bracketAppearances).toBe(1);
+  expect(after.wins - before.wins).toBe(4);
+  expect(after.losses - before.losses).toBe(0);
+  expect(after.appearances - before.appearances).toBe(4);
+
+  await expect(statValue(page, "Brackets won")).toHaveText(
+    String(after.bracketWins),
+  );
+  await expect(statValue(page, "Bracket appearances")).toHaveText(
+    String(after.bracketAppearances),
+  );
+  await expect(statValue(page, "Match wins")).toHaveText(String(after.wins));
+  await expect(statValue(page, "Match appearances")).toHaveText(
+    String(after.appearances),
   );
 
   await page.getByRole("button", { name: "Play Again" }).click();
   await page.getByRole("button", { name: /hall of fame/i }).click();
-  await expect(page.getByText(/Wins/).first()).toBeVisible({ timeout: 10_000 });
+  await expect(
+    page.getByRole("heading", { name: /hall of fame/i }),
+  ).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/match wins/i).first()).toBeVisible({
+    timeout: 10_000,
+  });
 });

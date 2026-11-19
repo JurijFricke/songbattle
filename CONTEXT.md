@@ -243,9 +243,10 @@ Windows  C:\Users\jurij\projects\songbattle
 
 Current branch is `dev`; working tree is clean and level with `origin/dev`.
 The checkpoint log at the end of this file is the authoritative latest-commit
-record. The VM checkout is fast-forwarded to the same commit. Nothing is
-running or exposed on the VM; no Quadlet unit is started or enabled. The next
-session resumes at step 1 of "Next steps" below.
+record. The VM is reachable over key-only SSH and its checkout tracks `dev`;
+fast-forward it before deployment. Nothing is running or exposed on the VM; no
+Quadlet unit is started or enabled. The next session resumes at step 1 of
+"Next steps" below.
 
 Branches:
 
@@ -288,6 +289,9 @@ repositories until production validation is complete.
 - 2 GB swap created and persisted; swappiness set to 10.
 - Rootless Podman installed and verified.
 - Docker and Docker data removed after Podman verification.
+- SSH key access from macOS was re-verified on 2026-11-19. The VM reports
+  `oracle-vm`, kernel `7.0.0-1013-oracle`, and Podman `4.9.3`; its checkout was
+  fast-forwarded to `d581248`. No unit was enabled or started.
 
 ### Git/monorepo
 
@@ -442,6 +446,11 @@ packages/contracts
   `battle_session_songs`. The leaderboard ranks by bracket wins, then match
   wins, then losses; the winner card and Hall of Fame label the two records
   separately.
+- The live Playwright flow now asserts both records. It captures the song list
+  and each song's pre-battle statistics through the API, plays all 15 matchups,
+  and checks that the champion gained exactly one bracket win, one bracket
+  appearance, four match wins, and four match appearances. The run passed on
+  2026-11-19 in 17.4 seconds against the public playlist fixture.
 
 ### Verified commands
 
@@ -523,35 +532,36 @@ With local backend `.env` credentials configured (never commit or share them):
 
 ## Next steps, in order
 
-1. Test the complete frontend battle flow using the local Vite proxy:
-   start game → load Embeds → vote → next matchup → winner → stats. Verify both
-   the match record and the bracket record.
-2. Test official Spotify Embeds manually while logged out, logged into Free if
+The complete local frontend flow is now covered by the live Playwright test
+(`pnpm --filter @songbattle/frontend test:e2e`), which verifies that a 16-song
+champion gains four match wins and one bracket win.
+
+1. Test official Spotify Embeds manually while logged out, logged into Free if
    available, and logged into Premium; verify playback, scrubbing, save/like
    behavior, and browser privacy behavior.
-3. Add deterministic mocked browser E2E coverage alongside the real integration
+2. Add deterministic mocked browser E2E coverage alongside the real integration
    flow test; the current Playwright test uses the local Spotify credentials and
    the public playlist fixture.
-4. Reduce the temporary pnpm build-script allowlist now that the old CRA
+3. Reduce the temporary pnpm build-script allowlist now that the old CRA
    dependency tree is gone.
-5. Images are already built and tagged `:latest` on the VM. Remaining: create
+4. Images are already built and tagged `:latest` on the VM. Remaining: create
    `production.env` with real credentials, start the Quadlet units, verify Caddy
    persistence and the API health path, then test rollback.
-6. Configure a free domain/DNS when available:
+5. Configure a free domain/DNS when available:
 
 ```text
 example-domain → production
 staging.example-domain → staging
 ```
 
-7. Configure staging on the VM with separate SQLite/cache data, then validate
+6. Configure staging on the VM with separate SQLite/cache data, then validate
    deployment from `dev`.
-8. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
+7. Harden SSH, verify OCI ingress/UFW after Caddy is ready, and configure
    scheduled SQLite backups plus a tested restore procedure.
-9. Extend GitHub Actions with staging/production deployment after the VM
+8. Extend GitHub Actions with staging/production deployment after the VM
    deployment files are validated.
-10. Promote the validated `dev` state to `main`, deploy production, and retain
-    old GitHub repositories until the user explicitly approves retirement.
+9. Promote the validated `dev` state to `main`, deploy production, and retain
+   old GitHub repositories until the user explicitly approves retirement.
 
 ## Latest commits on active dev
 
@@ -560,6 +570,7 @@ record of completed work units and is kept current by `pnpm checkpoint`.
 
 ## Checkpoint log
 
+- 2026-11-19 00:23 UTC — dev — test(e2e): verify match and bracket records in live flow
 - 2026-11-19 00:18 UTC — dev — feat(stats): track bracket wins separately from match records
 - 2026-11-19 00:09 UTC — dev — fix(battle): number matchups globally across rounds
 - 2026-11-18 23:56 UTC — dev — docs: document playwright browser install and fresh-clone verification
