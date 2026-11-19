@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactConfetti from "react-confetti";
 import type { Song, SongStats } from "@songbattle/contracts";
 import {
@@ -8,6 +8,7 @@ import {
   saveBattleVoteAPI,
 } from "../services/api";
 import { useGame } from "../context/useGame";
+import { sessionMatchupNumber } from "../domain/matchup";
 import ProgressBar from "./ProgressBar";
 import SpotifyPlayer from "./SpotifyPlayer";
 import Accordion from "./Accordion";
@@ -31,7 +32,9 @@ const SongBattle = () => {
   const [nextContenders, setNextContenders] = useState<Song[]>([]);
   const [winner, setWinner] = useState<Song | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [initialSongCount, setInitialSongCount] = useState(0);
   const [currentBattleIndex, setCurrentBattleIndex] = useState(0);
+  const voteInFlightRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isBattleLoading, setIsBattleLoading] = useState(false);
@@ -58,6 +61,7 @@ const SongBattle = () => {
         if (cancelled) return;
         setContenders(response.songs);
         setSessionId(response.sessionId);
+        setInitialSongCount(response.songs.length);
         if (response.warning) setError(response.warning);
       } catch (loadError) {
         if (!cancelled) setError(errorMessage(loadError));
@@ -95,25 +99,36 @@ const SongBattle = () => {
     };
   }, [winner]);
 
-  const handleVote = (selectedSong: Song): void => {
+  const handleVote = async (selectedSong: Song): Promise<void> => {
     const song1 = contenders[currentBattleIndex];
     const song2 = contenders[currentBattleIndex + 1];
-    if (!song1 || !song2 || !sessionId) return;
+    if (!song1 || !song2 || !sessionId || voteInFlightRef.current) return;
 
     const loserSong = selectedSong.id === song1.id ? song2 : song1;
-    void saveBattleVoteAPI({
-      sessionId,
-      matchupNumber: Math.floor(currentBattleIndex / 2) + 1,
-      winnerSongId: selectedSong.id,
-      loserSongId: loserSong.id,
-    }).catch((voteError: unknown) => setError(errorMessage(voteError)));
+    const matchupNumber = sessionMatchupNumber(
+      initialSongCount,
+      contenders.length,
+      currentBattleIndex,
+    );
 
+    voteInFlightRef.current = true;
+    setError(null);
     setLastClickedButtonId(selectedSong.id);
     setCurrentWinnerId(selectedSong.id);
     setCurrentLoserId(loserSong.id);
     setIsBattleLoading(true);
 
-    window.setTimeout(() => {
+    try {
+      await saveBattleVoteAPI({
+        sessionId,
+        matchupNumber,
+        winnerSongId: selectedSong.id,
+        loserSongId: loserSong.id,
+      });
+      await new Promise<void>((resolve) => {
+        window.setTimeout(() => resolve(), 300);
+      });
+
       const newNextContenders = [...nextContenders, selectedSong];
       const nextBattleIndex = currentBattleIndex + 2;
       let updatedContenders = contenders;
@@ -132,6 +147,10 @@ const SongBattle = () => {
         updatedContenders = newNextContenders;
       }
 
+      if (nextGameWinner) {
+        await completeBattleAPI(sessionId, nextGameWinner.id);
+      }
+
       setLastClickedButtonId(null);
       setCurrentWinnerId(null);
       setCurrentLoserId(null);
@@ -144,16 +163,15 @@ const SongBattle = () => {
         setIsWinnerStatsLoading(true);
       }
       setWinner(nextGameWinner);
+    } catch (voteError) {
+      setError(errorMessage(voteError));
+      setLastClickedButtonId(null);
+      setCurrentWinnerId(null);
+      setCurrentLoserId(null);
+    } finally {
       setIsBattleLoading(false);
-
-      if (nextGameWinner && sessionId) {
-        void completeBattleAPI(sessionId, nextGameWinner.id).catch(
-          (completeError: unknown) => {
-            setError(errorMessage(completeError));
-          },
-        );
-      }
-    }, 300);
+      voteInFlightRef.current = false;
+    }
   };
 
   if (winner) {
@@ -278,7 +296,7 @@ const SongBattle = () => {
               <SpotifyPlayer song={song1} />
               <button
                 type="button"
-                onClick={() => handleVote(song1)}
+                onClick={() => void handleVote(song1)}
                 className={`${styles.voteButton} ${lastClickedButtonId === song1.id ? styles.votedButton : ""}`}
               >
                 Vote
@@ -293,7 +311,7 @@ const SongBattle = () => {
               <SpotifyPlayer song={song2} />
               <button
                 type="button"
-                onClick={() => handleVote(song2)}
+                onClick={() => void handleVote(song2)}
                 className={`${styles.voteButton} ${lastClickedButtonId === song2.id ? styles.votedButton : ""}`}
               >
                 Vote

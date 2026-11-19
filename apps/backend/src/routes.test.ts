@@ -106,6 +106,20 @@ describe("API routes", () => {
       });
     });
 
+    it("rejects reusing a matchup number with a different result with 409", async () => {
+      const response = await request(app)
+        .post("/api/votes")
+        .send(vote(sessionId, 1, 2, 1));
+
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe(409);
+      expect(await getSongStats(songId(2))).toMatchObject({
+        wins: 0,
+        losses: 1,
+        appearances: 1,
+      });
+    });
+
     it("rejects votes for songs outside the session with 409", async () => {
       const response = await request(app)
         .post("/api/votes")

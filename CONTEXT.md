@@ -22,10 +22,10 @@ node ~/projects/songbattle/scripts/resume.mts
 
 Windows paths are `C:\Users\jurij\projects\songbattle`.
 
-**Always work on `dev`.** `main` is the pre-migration baseline (`9fdcd90`, 41
-commits behind `dev` as of 2026-11-19) kept for history; it does not contain the
-current tooling, which is why the commands below do not exist there. `main` is
-promoted deliberately at release time, never used for development.
+**Always work on `dev`.** `main` is the pre-migration baseline (`9fdcd90`) kept
+for history. It is many commits behind `dev` and does not contain the current
+tooling, which is why the commands below do not exist there. `main` is promoted
+deliberately at release time, never used for development.
 
 ### First clone on a new machine
 
@@ -234,16 +234,18 @@ credentials in this file.
 
 ## Repository state
 
-Active repository:
+Checkouts:
 
 ```text
-C:\Users\jurij\projects\songbattle
+macOS    /Users/jurij/projects/songbattle
+Windows  C:\Users\jurij\projects\songbattle
 ```
 
-Current branch is `dev`; working tree is clean and level with `origin/dev` at
-`7bb4e54`. CI passed on that commit; the VM checkout was fast-forwarded to it.
-Nothing is running or exposed on the VM; no Quadlet unit is started or enabled.
-The next session resumes at step 1 of "Next steps" below.
+Current branch is `dev`; working tree is clean and level with `origin/dev`.
+The checkpoint log at the end of this file is the authoritative latest-commit
+record. The VM checkout is fast-forwarded to the same commit. Nothing is
+running or exposed on the VM; no Quadlet unit is started or enabled. The next
+session resumes at step 1 of "Next steps" below.
 
 Branches:
 
@@ -420,6 +422,18 @@ packages/contracts
 - `completeBattleSession` semantics hardened: completing an already-complete
   session with the same winner stays idempotent (204), while a different winner
   now returns 409 instead of silently no-oping.
+- Matchup numbering is now session-global instead of per-round. Previously
+  round 2 and later reused matchup numbers `1..n`, and the vote idempotency
+  check silently discarded those votes as duplicates: a 16-song bracket stored
+  only 8 of its 15 votes, so winner statistics and the Hall of Fame were
+  undercounted. `apps/frontend/src/domain/matchup.ts` computes the global
+  number and has a regression test. `recordBattleVote` now returns 409 when a
+  matchup number is reused with different songs instead of reporting a
+  duplicate.
+- Vote submission is awaited before advancing, and completion is awaited
+  before the winner screen and statistics load. An in-flight ref prevents
+  double submissions; a failed vote or completion leaves the current matchup
+  in place so it can be retried.
 
 ### Verified commands
 
@@ -490,6 +504,14 @@ With local backend `.env` credentials configured (never commit or share them):
   avoids paid managed services but cannot guarantee an Oracle billing outcome.
 - The VM has no configured automated off-VM application backup yet. Backup and
   restore must be implemented and tested before production data matters.
+- Hall of Fame has no error path: a failed `/api/stats` request leaves the
+  accordion on "Loading Hall of Fame..." and produces an unhandled rejection.
+- Song-cache pruning treats every song ever used in a session as permanently
+  protected, so `SONG_POOL_MAX_SIZE` is not a hard bound while the session tables
+  grow without retention.
+- `server.ts` registers the imported `shutdown` function as a signal listener in
+  addition to the correct server-bound handler. The extra listener has no server
+  argument and would throw if a signal reached it; remove it.
 
 ## Next steps, in order
 
@@ -524,23 +546,12 @@ staging.example-domain → staging
 
 ## Latest commits on active dev
 
-```text
-7bb4e54 test(backend): real-SQLite integration suite; fix Express error handler arity
-65f7fe4 chore(lint): forbid non-null assertions and explicit any
-adfde9d docs: record retagged images and green CI
-86e7af5 docs: record VM path relocation
-ad58b33 chore(infra): move VM checkout to ~/projects/songbattle
-b142796 docs: record ARM64 image validation
-d03cc82 fix(infra): qualify Caddy image registry
-71029c2 docs: record deployment scaffold
-92cb834 feat(infra): add ARM64 Podman deployment scaffold
-7086832 docs: record green CI run
-6b73ffa test(backend): initialize database in route tests
-1ca0dd3 docs: record CI formatting fix
-```
+Run `git log --oneline -12`. The checkpoint log below is the authoritative
+record of completed work units and is kept current by `pnpm checkpoint`.
 
 ## Checkpoint log
 
+- 2026-11-19 00:09 UTC — dev — fix(battle): number matchups globally across rounds
 - 2026-11-18 23:56 UTC — dev — docs: document playwright browser install and fresh-clone verification
 - 2026-11-18 23:52 UTC — dev — docs: fix new-clone instructions (clone lands on main)
 - 2026-11-18 23:51 UTC — dev — fix(tooling): refuse resume on main branch

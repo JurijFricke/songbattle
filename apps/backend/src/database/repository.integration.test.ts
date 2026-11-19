@@ -233,6 +233,28 @@ describe("battle session persistence", () => {
     expect(stats).toMatchObject({ wins: 1, losses: 0, appearances: 1 });
   });
 
+  it("rejects reusing a matchup number for a different result", async () => {
+    const sessionId = "67676767-6767-4767-8767-676767676767";
+    await saveSongs([makeSong(42), makeSong(43)]);
+    await createSession(sessionId, [42, 43]);
+
+    await expect(recordBattleVote(vote(sessionId, 1, 42, 43))).resolves.toBe(
+      "recorded",
+    );
+    await expect(
+      recordBattleVote(vote(sessionId, 1, 43, 42)),
+    ).rejects.toMatchObject({
+      status: 409,
+      message: expect.stringContaining("different result"),
+    });
+
+    await expect(getSongStats(songId(42))).resolves.toMatchObject({
+      wins: 1,
+      losses: 0,
+      appearances: 1,
+    });
+  });
+
   it("completes sessions idempotently and rejects conflicting winners", async () => {
     const sessionId = "77777777-7777-4777-8777-777777777777";
     await saveSongs([makeSong(50), makeSong(51), makeSong(52)]);

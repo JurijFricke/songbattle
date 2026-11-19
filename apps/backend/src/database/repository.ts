@@ -306,7 +306,10 @@ export const recordBattleVote = async (
   }
 
   const existingVote = await db
-    .select({ id: battleVotes.id })
+    .select({
+      winnerSongId: battleVotes.winnerSongId,
+      loserSongId: battleVotes.loserSongId,
+    })
     .from(battleVotes)
     .where(
       and(
@@ -315,7 +318,19 @@ export const recordBattleVote = async (
       ),
     )
     .limit(1);
-  if (existingVote.length > 0) return "duplicate";
+  const existing = existingVote[0];
+  if (existing) {
+    if (
+      existing.winnerSongId === vote.winnerSongId &&
+      existing.loserSongId === vote.loserSongId
+    ) {
+      return "duplicate";
+    }
+    throw new BattleVoteError(
+      409,
+      "This matchup has already been recorded with a different result.",
+    );
+  }
 
   const timestamp = now();
   await db.transaction(async (transaction) => {
